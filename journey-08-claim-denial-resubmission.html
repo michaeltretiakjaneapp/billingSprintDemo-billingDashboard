@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Map — Claim Denial &amp; Resubmission</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root{--bg:#E8E6E1;--text:#1A1A1A;--text-muted:#5A5751;--card-task:#FFF9C4;--card-task-border:#E8DF8A;--card-pain:#FFCDD2;--card-pain-border:#EF9A9A;--card-step:#D1C4E9;--card-step-border:#B39DDB;--card-opp:#C8E6C9;--card-opp-border:#A5D6A7;--activity-bg:#1A1A1A;--grid-line:#D5D2CC;--shadow:#D4D1CC20;--col-w:280px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:auto;overflow-y:auto}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;opacity:0.4;pointer-events:none;z-index:0}
+  .page{position:relative;z-index:1;padding:32px 32px 60px;min-width:max-content}
+  .page-header{margin-bottom:20px;max-width:800px}
+  .page-header h1{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px}
+  .page-header p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+  .meta-row{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .top-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .goal-chip{background:var(--activity-bg);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;line-height:1.4;white-space:nowrap}
+  .goal-chip span{color:#90CAF9;font-weight:700;margin-right:4px}
+  .legend{display:flex;gap:16px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-muted);flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:16px;height:11px;border-radius:3px;border:1px solid #ccc}
+  .stats-bar{display:flex;gap:18px;margin-bottom:14px;font-size:11px;font-weight:600;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:5px;color:var(--text-muted)}
+  .stat-item::before{font-size:9px}
+  .stat-item.pain::before{content:'⬤';color:#EF5350}
+  .stat-item.opp::before{content:'⬤';color:#66BB6A}
+  .stat-item.tasks::before{content:'⬤';color:#7E57C2}
+  .controls{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:#fff;border:1.5px solid var(--grid-line);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .controls button:hover{background:#f0efec;border-color:#bbb}
+  .controls button.active{background:var(--activity-bg);color:#fff;border-color:var(--activity-bg)}
+  .controls-sep{width:1px;height:20px;background:var(--grid-line);margin:0 4px}
+  .actor-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+  .map-row{display:flex;align-items:flex-start;gap:0}
+  .activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .activity-label{background:var(--activity-bg);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px var(--shadow);margin-bottom:8px}
+  .activity-num{background:rgba(255,255,255,0.15);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .activity-cols{display:flex;gap:24px;align-items:flex-start}
+  .activity-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;border-radius:1px;margin:0 24px}
+  .step-col{width:var(--col-w);min-width:var(--col-w);display:flex;flex-direction:column;gap:16px}
+  .fixed-header-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);box-shadow:0 4px 16px rgba(0,0,0,0.1);padding:8px 32px 10px;display:none;overflow:hidden}
+  .fixed-header-bar.visible{display:block}
+  .fixed-header-bar::-webkit-scrollbar{height:0;display:none}
+  .fh-inner{display:flex;align-items:flex-end;gap:0;min-width:max-content}
+  .fh-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .fh-activity-group .activity-label{margin-bottom:6px}
+  .fh-step-row{display:flex;gap:24px}
+  .fh-step-card{width:var(--col-w);min-width:var(--col-w)}
+  .fh-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .fixed-header-bar.sl-mode{padding-left:calc(32px + 150px)}
+  .card{border-radius:7px;padding:9px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow)}
+  .card-step{background:var(--card-step);border:1.5px solid var(--card-step-border)}
+  .card-step .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#5E35B1;margin-bottom:3px}
+  .card-step .card-title{font-size:14px;font-weight:700;color:#311B92;line-height:1.3}
+  .task-group{display:flex;flex-direction:column}
+  .task-header{background:var(--card-task);border:1.5px solid var(--card-task-border);border-radius:7px;padding:8px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow);cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:7px;position:relative;z-index:2}
+  .task-header:hover{filter:brightness(0.97)}
+  .task-group.open .task-header{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  .task-header .toggle{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8D7B00;margin-top:1px;transition:transform 0.2s;order:2;margin-left:auto}
+  .task-group.open .task-header .toggle{transform:rotate(90deg)}
+  .task-header .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#8D7B00;margin-bottom:1px}
+  .task-header .task-text{flex:1;order:1}
+  .task-details{display:none;flex-direction:column;gap:8px;padding:8px;margin-top:-1px;background:#FDF8D8;border:1.5px solid var(--card-task-border);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;position:relative;z-index:1}
+  .task-group.open .task-details{display:flex;animation:expandPanel 0.15s ease-out forwards}
+  .task-group.open .task-details>*{opacity:0;animation:fadeInChild 0.12s ease-out forwards;animation-delay:0.1s}
+  .task-group.open .task-details>*:nth-child(2){animation-delay:0.13s}
+  .task-group.open .task-details>*:nth-child(3){animation-delay:0.16s}
+  .task-group.open .task-details>*:nth-child(4){animation-delay:0.19s}
+  .task-group.open .task-details>*:nth-child(5){animation-delay:0.22s}
+  .task-group.open .task-details>*:nth-child(n+6){animation-delay:0.25s}
+  @keyframes expandPanel{from{max-height:0;opacity:0.5;padding-top:0;padding-bottom:0}to{max-height:2000px;opacity:1;padding-top:8px;padding-bottom:8px}}
+  @keyframes fadeInChild{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .card-pain{background:var(--card-pain);border:1.5px solid var(--card-pain-border)}
+  .card-pain .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#C62828;margin-bottom:1px}
+  .card-opp{background:var(--card-opp);border:1.5px solid var(--card-opp-border)}
+  .card-opp .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#2E7D32;margin-bottom:1px}
+  .card-pain-sug{background:#FFF3F2;border:1.5px dashed #EF9A9A}
+  .card-pain-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#C62828;margin-bottom:1px}
+  .card-opp-sug{background:#F2FAF2;border:1.5px dashed #A5D6A7}
+  .card-opp-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#2E7D32;margin-bottom:1px}
+  .nested-quote{margin-top:6px;padding:6px 9px;border-radius:5px;background:#F5F4F0;border:1px solid #E0DED8;font-style:italic;font-size:14px;line-height:1.4;color:var(--text)}
+  .nested-quote+.nested-quote{margin-top:4px}
+  .quote-source-badge{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px;vertical-align:middle;font-style:normal}
+  .nested-quote[data-source="interview"] .quote-source-badge{background:#E3F2FD;color:#1565C0}
+  .nested-quote[data-source="community"] .quote-source-badge{background:#F3E5F5;color:#6A1B9A}
+  .nested-quote[data-source="feedback"] .quote-source-badge{background:#FFF8E1;color:#F57F17}
+  .quote-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;gap:0;background:transparent}
+  .quote-bar .qb-cell{height:100%;min-width:0}
+  .quote-bar .qb-cell.pain{background:#EF5350}
+  .quote-bar .qb-cell.opp{background:#66BB6A}
+  .quote-bar .qb-cell.pain-sug{background:transparent;border:1.5px solid #EF5350;box-sizing:border-box}
+  .quote-bar .qb-cell.opp-sug{background:transparent;border:1.5px solid #66BB6A;box-sizing:border-box}
+  .quote-bar .qb-cell:first-child{border-radius:3px 0 0 3px}
+  .quote-bar .qb-cell:last-child{border-radius:0 3px 3px 0}
+  .quote-bar .qb-cell:first-child:last-child{border-radius:3px}
+  .task-group.open .quote-bar{display:none}
+  .task-meta-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .task-meta-row .quote-bar{flex:1;margin-top:0}
+  .task-group.open .task-meta-row{display:none}
+  .jira-badge{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;font-size:9px;font-weight:700;color:#2684FF;background:#EBF1FF;border-radius:4px;padding:1px 6px 1px 4px;line-height:1.5;white-space:nowrap;border:1px solid #C5D8FF}
+  .jira-badge svg{width:9px;height:9px;flex-shrink:0}
+  #swimlane-view{display:none}
+  .swimlane-container{min-width:max-content;padding-top:8px;position:relative}
+  .sl-header-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px}
+  .sl-header-row .sl-corner{width:150px;min-width:150px}
+  .sl-header-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .sl-header-activity-group .sl-step-headers{display:flex;gap:24px}
+  .sl-header-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-actor-row{display:flex;gap:0;align-items:flex-start;min-height:60px}
+  .sl-actor-row+.sl-actor-row{border-top:1px solid #D5D2CC;padding-top:8px}
+  .sl-actor-label{width:150px;min-width:150px;padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:flex-start;gap:6px;position:sticky;left:0;background:var(--bg);z-index:8;align-self:stretch}
+  .sl-actor-label .al-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .sl-actor-cells{display:flex;gap:0;align-items:flex-start}
+  .sl-activity-cell-group{display:flex;gap:24px;align-items:flex-start}
+  .sl-cell-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-step-cell{min-width:var(--col-w);width:var(--col-w);padding:16px 0;display:flex;flex-direction:column;gap:16px}
+  .sl-step-cell .task-group{width:100%;min-width:0}
+  .sl-arrow-overlay{position:absolute;top:0;left:0;pointer-events:none;z-index:3}
+  .sl-arrow-overlay path{fill:none;stroke:#7E57C2;stroke-width:2}
+  .sl-arrow-overlay path.vtask-connector{stroke:#D4A017;stroke-width:2}
+  .edit-notice{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--activity-bg);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;gap:12px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap}
+  body.edit-mode .edit-notice{display:flex}
+  .edit-notice button{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:5px;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  .edit-notice button:hover{background:rgba(255,255,255,0.25)}
+  body.edit-mode [contenteditable="true"]{outline:1.5px dashed #7E57C2;outline-offset:2px;border-radius:3px;cursor:text;min-width:4px}
+  body.edit-mode [contenteditable="true"]:focus{outline:2px solid #7E57C2;background:rgba(126,87,194,0.06)}
+  body::-webkit-scrollbar{height:10px}
+  body::-webkit-scrollbar-track{background:#D5D2CC}
+  body::-webkit-scrollbar-thumb{background:#AAA69E;border-radius:5px}
+  .task-quote-link{flex-shrink:0;order:3;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:#8D7B00;opacity:0.7;position:relative;transition:opacity 0.15s,background 0.15s;margin-top:1px;background:transparent;border:none;padding:0;font-family:inherit}
+  .task-quote-link:hover{opacity:1;background:rgba(141,123,0,0.12)}
+  .task-quote-link svg{width:13px;height:13px;fill:currentColor}
+  .quote-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;background:#fff;border:1.5px solid #E0DED8;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,0.13);padding:10px 12px;min-width:220px;max-width:320px;display:none;flex-direction:column;gap:6px;font-style:normal}
+  .task-quote-link.popover-open .quote-popover{display:flex}
+  .quote-popover-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#AAA69E;margin-bottom:2px}
+  .quote-popover .nested-quote{margin-top:0;font-size:11.5px}
+  .jira-panel{margin-top:2px;border-radius:6px;border:1.5px solid #CFD8DC;background:#F8FAFB;overflow:hidden}
+  .jira-panel-header{display:flex;align-items:center;gap:6px;padding:6px 9px;cursor:pointer;user-select:none;font-size:11px;font-weight:700;color:#37474F;background:#ECEFF1;border-bottom:1.5px solid transparent;transition:background 0.15s}
+  .jira-panel-header:hover{background:#E0E7EE}
+  .jira-panel.open .jira-panel-header{border-bottom-color:#CFD8DC}
+  .jira-panel-icon{width:14px;height:14px;flex-shrink:0}
+  .jira-panel-toggle{margin-left:auto;font-size:10px;color:#78909C;transition:transform 0.2s}
+  .jira-panel.open .jira-panel-toggle{transform:rotate(90deg)}
+  .jira-panel-body{display:none;flex-direction:column;gap:4px;padding:8px}
+  .jira-panel.open .jira-panel-body{display:flex}
+  .jira-item{display:flex;align-items:flex-start;gap:7px;padding:5px 7px;border-radius:5px;background:#fff;border:1px solid #E4EAEF;font-size:11.5px;line-height:1.4;text-decoration:none;color:inherit;transition:border-color 0.15s,background 0.15s}
+  .jira-item:hover{border-color:#90CAF9;background:#F0F7FF}
+  .jira-item-type{flex-shrink:0;width:16px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;text-transform:uppercase;margin-top:1px}
+  .jira-item-type.epic{background:#8329CF;color:#fff}
+  .jira-item-type.story{background:#63BA3C;color:#fff}
+  .jira-item-type.bug{background:#E5493A;color:#fff}
+  .jira-item-type.task{background:#4BADE8;color:#fff}
+  .jira-item-type.project{background:#0052CC;color:#fff}
+  .jira-item-meta{display:flex;flex-direction:column;flex:1;min-width:0}
+  .jira-item-key{font-size:9.5px;font-weight:700;color:#6B778C;letter-spacing:0.3px;margin-bottom:1px}
+  .jira-item-title{font-size:11.5px;font-weight:600;color:#172B4D;line-height:1.35}
+  .jira-item-status{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;padding:1px 5px;border-radius:3px;margin-top:3px;display:inline-block;background:#DFE1E6;color:#42526E}
+  .jira-item-status.in-progress{background:#DEEBFF;color:#0052CC}
+  .jira-item-status.done{background:#E3FCEF;color:#006644}
+  .jira-item-status.todo{background:#DFE1E6;color:#42526E}
+  .jira-no-items{font-size:11px;color:#78909C;text-align:center;padding:6px 0;font-style:italic}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;padding:6px 12px;background:#1A1A1A;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">&larr; Back to Journey Index</a>
+  <div class="page-header">
+    <h1>Claim Denial &amp; Resubmission</h1>
+    <p>Jane · Insurance Billing · Journey #8 — How billers identify, investigate, correct, and resubmit denied claims, and what happens when corrections fail.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="goal-chip"><span>G1</span> Understand the denial reason quickly and accurately</div>
+    <div class="goal-chip"><span>G2</span> Correct and resubmit before timely filing deadlines</div>
+    <div class="goal-chip"><span>G3</span> Recover full payment owed for services rendered</div>
+    <div class="goal-chip"><span>G4</span> Minimize write-offs and preventable AR aging</div>
+    <div class="goal-chip"><span>G5</span> Identify denial patterns to prevent future rejections</div>
+  </div>
+
+  <div id="legend" class="legend"></div>
+  <div id="stats-bar" class="stats-bar"></div>
+
+  <div class="controls">
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.add('open'));scheduleArrowRedraw()">Expand All</button>
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.remove('open'));scheduleArrowRedraw()">Collapse All</button>
+    <div class="controls-sep"></div>
+    <button id="btn-default" class="active" onclick="toggleView('default')">Column View</button>
+    <button id="btn-swimlane" onclick="toggleView('swimlane')">Swimlane View</button>
+    <div class="controls-sep"></div>
+    <button id="src-all" class="source-filter-btn active" onclick="filterBySource('all',this)">All Sources</button>
+    <button id="src-interview" class="source-filter-btn" onclick="filterBySource('interview',this)">Interviews</button>
+    <button id="src-community" class="source-filter-btn" onclick="filterBySource('community',this)">Community</button>
+    <button id="src-feedback" class="source-filter-btn" onclick="filterBySource('feedback',this)">Feedback</button>
+    <div class="controls-sep"></div>
+    <button id="btn-edit" onclick="toggleEditMode()">Edit Map</button>
+    <button onclick="exportMap()">&#8595; Download</button>
+  </div>
+
+  <div class="fixed-header-bar" id="fixedHeader"><div class="fh-inner" id="fixedHeaderInner"></div></div>
+
+  <div id="default-view">
+  <div class="map-row">
+
+<!-- ===== ACTIVITY 0: DENIAL RECEIVED ===== -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">0</div>Denial Received</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.1</div><div class="card-title">ERA / EOB Arrives With Denial</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Scans ERA batch for denied claims
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Denied claims arrive mixed into routine ERA payment batches with no visual separation — billers must scan every line item to find them, creating a high-cognitive-load triage step every time an ERA is processed.</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>No denial notification or alert exists — billers may not notice a denial until an AR aging report surfaces the unpaid claim days or weeks later, pushing the correction dangerously close to timely filing deadlines.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A dedicated denial-flagged queue that automatically separates denied line items from processed payments in the ERA view, surfacing them as an action item requiring attention.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="jane" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="jane" style="background:#B2EBF2;color:#006064">Jane System</span>
+            <div class="card-type">Task</div>
+            Marks claim as denied and updates status
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Denied claims do not receive a visually distinct status in the claims list — they appear alongside submitted and paid claims, making it impossible to filter the view to "only show denied" without opening every ERA individually.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Auto-set a distinct "Denied" status badge on claims when an ERA denial code is received, visible from the Unsubmitted and claim list views without requiring the biller to open each ERA.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.2</div><div class="card-title">Triage the Denial</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Identifies denial category from CARC / RARC codes
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>CARC (Claim Adjustment Reason Codes) and RARC (Remittance Advice Remark Codes) are highly technical — billers must navigate away from Jane to external lookup tools like Find-A-Code or the WEDI CARC list to translate codes like CO-4 or CO-97 into actionable language.</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Multiple denial codes can appear on a single claim (e.g. a primary CARC plus a secondary RARC) with no guidance on which to address first or whether they are related.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Inline CARC/RARC plain-language translations displayed directly on the denied claim in Jane — "CO-4: The service billed is inconsistent with the modifier used" — so billers never need to leave the product to understand a denial.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Checks timely filing deadline for this payer
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Each payer has different timely filing limits — some are 90 days from date of service, others are 6 months or 1 year. There is no timely filing countdown or deadline indicator in Jane. Billers must track this manually or in a spreadsheet, and a missed deadline means permanent write-off.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A timely filing deadline indicator on each denied claim, calculated from the payer's known filing limit and the date of service, with a visual urgency flag (e.g. yellow = 30 days left, red = 7 days left).</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ===== ACTIVITY 1: INVESTIGATE ===== -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">1</div>Investigate the Denial</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.1</div><div class="card-title">Decode the Denial Reason</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Researches root cause using external tools and payer portals
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>No in-product denial reason library exists — billers navigate away from Jane to external coding sites, payer portals, or Google to understand why a claim was denied and what the correct fix is.</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>The same denial reason code can mean different things at different payers (e.g. CO-97 at Aetna vs CO-97 at BCBS). Without payer-specific context, billers risk applying the wrong fix.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Calls insurer provider services if denial reason is ambiguous
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Provider services hold times of 30–90 minutes are common for major payers. A single ambiguous denial can consume a large portion of a biller's day — and smaller clinics with one biller face the worst of this.</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Call outcomes (reference numbers, rep names, notes, promised resolution dates) must be stored outside Jane in spreadsheets or sticky notes. There is no way to log a phone inquiry against a specific claim.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A call log field on the claim where billers can record the date, rep name, reference number, and outcome of insurer phone calls — keeping the full paper trail attached to the claim.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.2</div><div class="card-title">Gather Missing Information</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Flags claim for practitioner correction and context
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>No native workflow in Jane allows a biller to notify a practitioner that their chart needs a correction before the claim can be resubmitted. Billers resort to Slack messages, emails, or verbal nudges — creating an informal, untrackable handoff.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "Request Correction" action on the denied claim that creates a task in the practitioner's Jane to-do list, including the denial reason and what needs to be fixed — creating a traceable, in-product handoff.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="practitioner" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="practitioner" style="background:#FFE0B2;color:#E65100">Practitioner</span>
+            <div class="card-type">Task</div>
+            Reviews denial context and corrects the chart if needed
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Practitioners have zero visibility into claim status or denial reasons in Jane. They cannot see if billing from one of their appointments has been denied or is awaiting a correction without a separate message from the biller — billing is entirely siloed from clinical workflows.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A billing status indicator on the appointment card in the schedule view — "Claim Denied — Correction Needed" — giving practitioners ambient awareness of billing issues tied to their appointments without requiring a separate communication channel.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ===== ACTIVITY 2: CORRECT THE CLAIM ===== -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">2</div>Correct the Claim</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.1</div><div class="card-title">Make Corrections to Claim Data</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Edits billing codes, diagnosis codes, or claim fields
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Editing a submitted claim silently bounces it back to Unsubmitted with no confirmation or warning (surfaced in Journey #6). Billers may not realize the claim needs to be re-batched and resubmitted — leading to it sitting in Unsubmitted indefinitely while the timely filing deadline passes.</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>If the denial was caused by the wrong insurer being selected, the insurer field is locked after submission. The only fix is to archive the invoice and recreate it from scratch — destroying the original submission history and breaking the claim's paper trail. (Active project: #proj-changeinsurer)</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>When a claim is edited and bounced back to Unsubmitted, show a prominent "Correction Saved — Ready to Resubmit" confirmation so billers know the next step explicitly rather than discovering it through the AR aging report.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Attaches supporting documentation required by insurer
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Clinical documentation required for medical necessity denials — operative reports, progress notes, prior authorization letters — cannot be attached to a claim in Jane. Billers must submit documentation through a separate payer portal, fax, or mail, breaking the workflow and creating a parallel paper trail.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A document attachment capability on the claim for prior auth letters, medical records, and appeal cover letters — keeping all claim-related materials in one place and enabling a future "submit with documentation" electronic pathway.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.2</div><div class="card-title">Verify Before Resubmission</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Confirms corrections are complete and accurate
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>No comparison view exists between the original submitted claim and the corrected version. Billers work from memory to ensure they haven't missed a field — an error in the correction leads to a second denial and another timely filing window lost.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "diff view" before resubmission that highlights exactly what changed between the original claim and the corrected version — giving billers a clear checklist before they commit to resubmission.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="jane" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="jane" style="background:#B2EBF2;color:#006064">Jane System</span>
+            <div class="card-type">Task</div>
+            Carries forward original claim ICN / TCN reference
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>The payer's original claim control number (ICN or TCN) from the ERA is required on the corrected claim's resubmission fields but is not surfaced in Jane after ERA processing. Billers must look it up in the clearinghouse portal separately — an extra manual step that introduces transcription error risk.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Auto-populate the original payer ICN/TCN from the ERA into the corrected claim's resubmission reference field, eliminating the manual lookup and reducing the risk of a second denial caused by a missing or incorrect reference number.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ===== ACTIVITY 3: RESUBMIT ===== -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">3</div>Resubmit the Claim</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.1</div><div class="card-title">Configure Resubmission Fields</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Selects correct CLM05-3 resubmission code
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>The distinction between Resubmission Code 6 (Corrected Claim) and Code 7 (Replacement of Prior Claim) is confusing and payer-specific. Selecting the wrong one triggers a secondary denial. No in-product guidance explains when to use each code. (Code 6 deprecated at some clearinghouses — surfaced in Journey #6.)</div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Resubmission Code 8 (Void/Cancel of Prior Claim) is selectable with no warning or confirmation prompt. Accidentally submitting a void reversal when a correction was intended is extremely difficult to undo and can trigger a recovery demand from the payer.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Contextual resubmission code guidance based on the denial reason: "This claim was denied with CO-4 (modifier issue) — use Code 6: Corrected Claim" — reducing the cognitive burden on billers and preventing secondary denials caused by incorrect code selection.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.2</div><div class="card-title">Submit the Corrected Claim</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Marks corrected claim ready and batches for submission
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Corrected claims near timely filing deadlines are queued in the same batch as routine new claims with no priority mechanism. An urgent resubmission due in 3 days competes equally with a fresh claim that has 6 months of runway.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A priority flag on corrected claims within 30 days of their timely filing deadline, surfacing them at the top of the submission queue and alerting the biller if a submission batch is missed.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="jane" data-activity="3" data-step="3.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="jane" style="background:#B2EBF2;color:#006064">Jane System</span>
+            <div class="card-type">Task</div>
+            Generates corrected 837 EDI with resubmission fields
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>The corrected 837 must include REF*F8 (original reference number loop) and the correct CLM05-3 resubmission code in the EDI. If either is missing or wrong, the clearinghouse or payer rejects the corrected claim as a duplicate — compounding the problem with another denial.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Validate that the resubmission code and original reference number are present and syntactically correct before generating the 837 — surfacing any gaps as a pre-submission warning rather than discovering them via a clearinghouse rejection days later.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.3</div><div class="card-title">Monitor Resubmission Status</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.3">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Tracks corrected claim through to acknowledgement
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>After resubmission, the corrected claim and the original denied claim appear as separate unlinked records in Jane. The full paper trail — original submission, denial, correction, resubmission, payment — is fragmented across multiple claim records with no native way to see them as a single lifecycle.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A claim history thread view that links all related claim records for a single visit into a sequential timeline: original submission → ERA denial → corrected claim → resubmission → payment response — making the full story visible in one place.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="clearinghouse" data-activity="3" data-step="3.3">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="clearinghouse" style="background:#D1C4E9;color:#4A148C">Clearinghouse</span>
+            <div class="card-type">Task</div>
+            Processes corrected 837 and routes to payer
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>If the clearinghouse flags the corrected claim as a duplicate (e.g. because the original ICN was missing or the resubmission code was wrong), the rejection message is generic — "Duplicate Claim" — with no indication of which original claim it's conflicting with or what the biller should change.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ===== ACTIVITY 4: RESOLUTION & FOLLOW-UP ===== -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">4</div>Resolution &amp; Follow-Up</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.1</div><div class="card-title">Evaluate Response to Corrected Claim</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Reviews ERA response to corrected claim
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>If the corrected claim is also denied, there is no structured next-step guidance in Jane. Billers must independently decide whether to appeal, write off, bill the secondary insurer, or escalate — with no decision framework and no tracking of which path was chosen.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A denial resolution decision tree on second denial: "Corrected claim denied again — next steps: File Formal Appeal / Write Off / Bill Secondary Insurer / Escalate to Payer Relations" — with the chosen path recorded against the claim for audit trail purposes.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Files formal appeal if payment is refused after correction
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Formal appeals require assembling a cover letter, clinical documentation, and a corrected claim together in a single submission packet. Jane has no appeal assembly, tracking, or submission capability — billers must manage the entire appeal workflow outside the product.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>An appeal packet builder that pulls the claim data, linked clinical notes from the chart, and a templated appeal letter into a single exportable PDF — reducing assembly time and ensuring no required component is missing.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.2</div><div class="card-title">Apply Adjustments or Write-Off</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Applies contractual adjustment or routes balance to patient
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>Distinguishing between a CO (Contractual Obligation — do not bill patient) and a PR (Patient Responsibility — bill patient) denial type is critical but requires manual interpretation of the ERA's adjustment reason codes. Misclassifying a CO as a PR means incorrectly billing a patient; missing a PR means the clinic absorbs avoidable revenue loss.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Auto-apply CO contractual adjustments directly from ERA data and auto-create a patient invoice for PR balances — surfacing the right next action without requiring the biller to manually interpret adjustment group codes from the raw EOB.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.3</div><div class="card-title">Denial Trend Analysis</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.3">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="biller" style="background:#F8BBD0;color:#880E4F">Biller</span>
+            <div class="card-type">Task</div>
+            Reviews denial patterns to identify systemic issues
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain Point</div>No denial analytics exist in Jane. Which payers have the highest denial rates? Which CPT/ICD-10 combinations are most frequently rejected? Which practitioners generate the most denials? All of this analysis requires exporting data and building spreadsheets manually — turning a preventive intelligence task into a multi-hour ad-hoc project.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A denial trend dashboard in the Billing tab showing denial rate by payer, top denial codes over time, and denial rate by practitioner — enabling proactive prevention (fixing documentation habits, challenging payer rules) rather than purely reactive correction.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="jane" data-activity="4" data-step="4.3">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text">
+            <span class="actor-badge" data-actor="jane" style="background:#B2EBF2;color:#006064">Jane System</span>
+            <div class="card-type">Task</div>
+            Surfaces denial pattern insights and prevention recommendations
+          </div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Proactive denial prevention recommendations surfaced at claim creation time: "This CPT/modifier combination has been denied by Aetna 4 times in the last 3 months — consider reviewing before submission." Turning historical denial data into forward-looking guardrails.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div><!-- /map-row -->
+  </div><!-- /default-view -->
+
+  <div id="swimlane-view"></div>
+
+</div><!-- /page -->
+
+<div class="edit-notice" id="editNotice">
+  ✏ Edit Mode — click any text to edit
+  <button onclick="toggleEditMode()">Exit Edit Mode</button>
+</div>
+
+<script type="application/json" id="journey-data">
+{
+  "title": "Claim Denial & Resubmission",
+  "subtitle": "Jane · Insurance Billing · Journey #8 — How billers identify, investigate, correct, and resubmit denied claims, and what happens when corrections fail.",
+  "version": "1.0",
+  "lastUpdated": "2026-03-10",
+  "goals": [
+    {"id": "G1", "text": "Understand the denial reason quickly and accurately"},
+    {"id": "G2", "text": "Correct and resubmit before timely filing deadlines"},
+    {"id": "G3", "text": "Recover full payment owed for services rendered"},
+    {"id": "G4", "text": "Minimize write-offs and preventable AR aging"},
+    {"id": "G5", "text": "Identify denial patterns to prevent future rejections"}
+  ],
+  "actors": [
+    {"id": "biller", "label": "Biller", "emoji": "🧾", "bg": "#F8BBD0", "color": "#880E4F"},
+    {"id": "practitioner", "label": "Practitioner", "emoji": "🩺", "bg": "#FFE0B2", "color": "#E65100"},
+    {"id": "jane", "label": "Jane System", "emoji": "🖥", "bg": "#B2EBF2", "color": "#006064"},
+    {"id": "clearinghouse", "label": "Clearinghouse", "emoji": "🔀", "bg": "#D1C4E9", "color": "#4A148C"},
+    {"id": "insurer", "label": "Insurer", "emoji": "🏦", "bg": "#C8E6C9", "color": "#1B5E20"}
+  ],
+  "activities": [
+    {"num": "0", "name": "Denial Received", "steps": [
+      {"id": "0.1", "title": "ERA / EOB Arrives With Denial"},
+      {"id": "0.2", "title": "Triage the Denial"}
+    ]},
+    {"num": "1", "name": "Investigate the Denial", "steps": [
+      {"id": "1.1", "title": "Decode the Denial Reason"},
+      {"id": "1.2", "title": "Gather Missing Information"}
+    ]},
+    {"num": "2", "name": "Correct the Claim", "steps": [
+      {"id": "2.1", "title": "Make Corrections to Claim Data"},
+      {"id": "2.2", "title": "Verify Before Resubmission"}
+    ]},
+    {"num": "3", "name": "Resubmit the Claim", "steps": [
+      {"id": "3.1", "title": "Configure Resubmission Fields"},
+      {"id": "3.2", "title": "Submit the Corrected Claim"},
+      {"id": "3.3", "title": "Monitor Resubmission Status"}
+    ]},
+    {"num": "4", "name": "Resolution & Follow-Up", "steps": [
+      {"id": "4.1", "title": "Evaluate Response to Corrected Claim"},
+      {"id": "4.2", "title": "Apply Adjustments or Write-Off"},
+      {"id": "4.3", "title": "Denial Trend Analysis"}
+    ]}
+  ]
+}
+</script>
+
+<script>
+let actors = [];
+let activitiesWithSteps = [];
+
+function initFromJSON() {
+  const jsonEl = document.getElementById('journey-data');
+  if (!jsonEl) return;
+  try {
+    const data = JSON.parse(jsonEl.textContent);
+    actors = (data.actors || []).map(a => ({id: a.id, label: (a.emoji ? a.emoji + ' ' : '') + a.label, color: a.bg}));
+    activitiesWithSteps = (data.activities || []).map(act => ({num: act.num, name: act.name, steps: (act.steps || []).map(s => ({id: s.id, title: s.title}))}));
+    if (data.lastUpdated && data.lastUpdated !== 'YYYY-MM-DD') {
+      const header = document.querySelector('.page-header');
+      if (header && !document.getElementById('meta-row')) {
+        const meta = document.createElement('p');
+        meta.id = 'meta-row'; meta.className = 'meta-row';
+        meta.textContent = 'Last updated: ' + data.lastUpdated;
+        header.appendChild(meta);
+      }
+    }
+  } catch(e) { console.warn('Could not parse journey-data JSON:', e); }
+}
+
+function buildLegend() {
+  const legend = document.getElementById('legend');
+  if (!legend) return;
+  let html = `<div class="legend-item"><div class="legend-swatch" style="background:var(--card-step)"></div> Step</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-task)"></div> Task</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-pain)"></div> Pain Point</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-opp)"></div> Opportunity</div><div class="legend-item"><div class="legend-swatch" style="background:#FFF3F2;border:1.5px dashed #EF9A9A"></div> Suggested Pain</div><div class="legend-item"><div class="legend-swatch" style="background:#F2FAF2;border:1.5px dashed #A5D6A7"></div> Suggested Opportunity</div>`;
+  if (actors.length > 0) {
+    html += '<div class="legend-item" style="margin-left:8px;width:1px;height:11px;background:#ccc"></div>';
+    actors.forEach(a => { html += `<div class="legend-item"><div class="legend-swatch" style="background:${a.color}"></div> ${a.label}</div>`; });
+  }
+  legend.innerHTML = html;
+}
+
+function updateStatsBar() {
+  const bar = document.getElementById('stats-bar');
+  if (!bar) return;
+  const tasks = document.querySelectorAll('#default-view .task-group').length;
+  let painCards = 0, oppCards = 0, painQuotes = 0, oppQuotes = 0, sugCount = 0;
+  document.querySelectorAll('#default-view .task-details').forEach(details => {
+    details.querySelectorAll('.card-pain').forEach(card => { const visible = [...card.querySelectorAll('.nested-quote')].filter(q => q.style.display !== 'none'); if (visible.length > 0) { painCards++; painQuotes += visible.length; } });
+    details.querySelectorAll('.card-opp').forEach(card => { const visible = [...card.querySelectorAll('.nested-quote')].filter(q => q.style.display !== 'none'); if (visible.length > 0) { oppCards++; oppQuotes += visible.length; } });
+    sugCount += details.querySelectorAll('.card-pain-sug, .card-opp-sug').length;
+  });
+  let html = `<span class="stat-item pain">${painCards} pain point${painCards !== 1 ? 's' : ''} &middot; ${painQuotes} quote${painQuotes !== 1 ? 's' : ''}</span><span class="stat-item opp">${oppCards} opportunit${oppCards !== 1 ? 'ies' : 'y'} &middot; ${oppQuotes} quote${oppQuotes !== 1 ? 's' : ''}</span><span class="stat-item tasks">${tasks} task${tasks !== 1 ? 's' : ''}</span>`;
+  if (sugCount > 0) html += `<span class="stat-item" style="color:#AAA;font-style:italic">${sugCount} suggestion${sugCount !== 1 ? 's' : ''} (no evidence yet)</span>`;
+  bar.innerHTML = html;
+}
+
+function filterBySource(source, btn) {
+  document.querySelectorAll('.source-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.nested-quote').forEach(q => { q.style.display = (source === 'all' || q.dataset.source === source) ? '' : 'none'; });
+  updateStatsBar();
+  scheduleArrowRedraw();
+}
+
+function buildSwimlane(){
+  const sv = document.getElementById('swimlane-view');
+  if(sv.children.length > 0) return;
+  const allTasks = document.querySelectorAll('#default-view .task-group[data-actor][data-step]');
+  const grid = {};
+  actors.forEach(a => { grid[a.id] = {}; activitiesWithSteps.forEach(act => act.steps.forEach(s => grid[a.id][s.id] = [])); });
+  allTasks.forEach(tg => { const actor = tg.dataset.actor; const step = tg.dataset.step; if(grid[actor] && grid[actor][step] !== undefined){ grid[actor][step].push(tg.cloneNode(true)); } });
+  const container = document.createElement('div');
+  container.className = 'swimlane-container';
+  const headerRow = document.createElement('div');
+  headerRow.className = 'sl-header-row';
+  headerRow.innerHTML = '<div class="sl-corner"></div>';
+  activitiesWithSteps.forEach((act, ai) => {
+    if(ai > 0) headerRow.innerHTML += '<div class="sl-header-divider"></div>';
+    let groupHTML = '<div class="sl-header-activity-group">';
+    groupHTML += `<div class="activity-label"><div class="activity-num">${act.num}</div>${act.name}</div>`;
+    groupHTML += '<div class="sl-step-headers">';
+    act.steps.forEach(s => { groupHTML += `<div class="card card-step" style="width:var(--col-w);min-width:var(--col-w);margin:0"><div class="card-type">Step ${s.id}</div><div class="card-title">${s.title}</div></div>`; });
+    groupHTML += '</div></div>';
+    headerRow.innerHTML += groupHTML;
+  });
+  container.appendChild(headerRow);
+  actors.forEach(actor => {
+    const row = document.createElement('div');
+    row.className = 'sl-actor-row';
+    const label = document.createElement('div');
+    label.className = 'sl-actor-label';
+    label.innerHTML = `<div class="al-dot" style="background:${actor.color}"></div>${actor.label}`;
+    row.appendChild(label);
+    const cells = document.createElement('div');
+    cells.className = 'sl-actor-cells';
+    activitiesWithSteps.forEach((act, ai) => {
+      if(ai > 0){ const div = document.createElement('div'); div.className = 'sl-cell-divider'; cells.appendChild(div); }
+      const actGroup = document.createElement('div');
+      actGroup.className = 'sl-activity-cell-group';
+      act.steps.forEach(s => {
+        const cell = document.createElement('div');
+        cell.className = 'sl-step-cell';
+        const taskNodes = grid[actor.id][s.id];
+        taskNodes.forEach(node => { const header = node.querySelector('.task-header'); if(header) header.onclick = function(e){ handleTaskHeaderClick(e, this); }; cell.appendChild(node); });
+        actGroup.appendChild(cell);
+      });
+      cells.appendChild(actGroup);
+    });
+    row.appendChild(cells);
+    container.appendChild(row);
+  });
+  sv.appendChild(container);
+  requestAnimationFrame(() => requestAnimationFrame(() => drawSwimlaneArrows(container)));
+}
+
+function drawSwimlaneArrows(container){
+  const old = container.querySelector('.sl-arrow-overlay');
+  if(old) old.remove();
+  const stepHeaders = container.querySelectorAll('.sl-header-row .card-step');
+  const stepIds = [];
+  stepHeaders.forEach(h => { const typeEl = h.querySelector('.card-type'); if(typeEl){ const match = typeEl.textContent.match(/Step (\d+\.\d+)/); if(match) stepIds.push(match[1]); } });
+  const actorRows = container.querySelectorAll('.sl-actor-row');
+  const stepTaskMap = {};
+  stepIds.forEach(sid => stepTaskMap[sid] = []);
+  actorRows.forEach(row => { const cells = row.querySelectorAll('.sl-step-cell'); let cellIdx = 0; stepIds.forEach(sid => { if(cellIdx < cells.length){ cells[cellIdx].querySelectorAll('.task-group').forEach(t => stepTaskMap[sid].push(t)); cellIdx++; } }); });
+  const containerRect = container.getBoundingClientRect();
+  const scrollLeft = container.scrollLeft || 0;
+  const scrollTop = container.scrollTop || 0;
+  const vConnectors = [];
+  stepIds.forEach(sid => {
+    const tasksInStep = stepTaskMap[sid];
+    if(tasksInStep.length < 2) return;
+    const sorted = tasksInStep.map(t => ({el:t, rect:t.getBoundingClientRect(), headerRect:t.querySelector('.task-header').getBoundingClientRect()})).sort((a,b) => a.headerRect.top - b.headerRect.top);
+    for(let t = 0; t < sorted.length - 1; t++){
+      const from = sorted[t], to = sorted[t+1];
+      vConnectors.push({x1:from.rect.left+from.rect.width/2-containerRect.left+scrollLeft, y1:from.rect.bottom-containerRect.top+scrollTop+2, x2:to.headerRect.left+to.headerRect.width/2-containerRect.left+scrollLeft, y2:to.headerRect.top-containerRect.top+scrollTop-2});
+    }
+  });
+  const arrows = [];
+  for(let i = 0; i < stepIds.length - 1; i++){
+    const fromTasks = stepTaskMap[stepIds[i]], toTasks = stepTaskMap[stepIds[i+1]];
+    if(fromTasks.length === 0 || toTasks.length === 0) continue;
+    let lastEl = null, lastBottom = -Infinity;
+    fromTasks.forEach(t => { const tRect = t.getBoundingClientRect(); const hRect = t.querySelector('.task-header').getBoundingClientRect(); if(tRect.bottom > lastBottom){ lastBottom = tRect.bottom; lastEl = {right:hRect.right, midY:hRect.top+hRect.height/2}; } });
+    let firstEl = null, firstTop = Infinity;
+    toTasks.forEach(t => { const h = t.querySelector('.task-header'); if(!h) return; const r = h.getBoundingClientRect(); if(r.top < firstTop){ firstTop = r.top; firstEl = {left:r.left, midY:r.top+r.height/2}; } });
+    if(!lastEl || !firstEl) continue;
+    arrows.push({x1:lastEl.right-containerRect.left+scrollLeft, y1:lastEl.midY-containerRect.top+scrollTop, x2:firstEl.left-containerRect.left+scrollLeft, y2:firstEl.midY-containerRect.top+scrollTop});
+  }
+  if(arrows.length === 0 && vConnectors.length === 0) return;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.classList.add('sl-arrow-overlay');
+  svg.style.width = container.scrollWidth+'px';
+  svg.style.height = container.scrollHeight+'px';
+  vConnectors.forEach(({x1,y1,x2,y2}) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const midY = y1+(y2-y1)/2; const r = Math.min(8,Math.abs(x2-x1)/2,Math.abs(y2-y1)/4);
+    let d;
+    if(Math.abs(x2-x1)<2){ d=`M${x1},${y1} L${x2},${y2}`; }
+    else { d=`M${x1},${y1} L${x1},${midY-r} Q${x1},${midY} ${x1+(x2>x1?r:-r)},${midY} L${x2-(x2>x1?r:-r)},${midY} Q${x2},${midY} ${x2},${midY+r} L${x2},${y2}`; }
+    path.setAttribute('d',d); path.classList.add('vtask-connector'); svg.appendChild(path);
+  });
+  arrows.forEach(({x1,y1,x2,y2}) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const sx=x1+4,ex=x2-4,midX=sx+(ex-sx)*0.5,r=12; let d; const dy=y2-y1;
+    if(Math.abs(dy)<4){ d=`M${sx},${y1} L${ex},${y2}`; }
+    else if(dy>0){ d=`M${sx},${y1} L${midX-r},${y1} Q${midX},${y1} ${midX},${y1+r} L${midX},${y2-r} Q${midX},${y2} ${midX+r},${y2} L${ex},${y2}`; }
+    else { d=`M${sx},${y1} L${midX-r},${y1} Q${midX},${y1} ${midX},${y1-r} L${midX},${y2+r} Q${midX},${y2} ${midX+r},${y2} L${ex},${y2}`; }
+    path.setAttribute('d',d); svg.appendChild(path);
+  });
+  container.appendChild(svg);
+}
+
+let _arrowTimer=null,_arrowTimer2=null;
+function scheduleArrowRedraw(){
+  clearTimeout(_arrowTimer); clearTimeout(_arrowTimer2);
+  _arrowTimer = setTimeout(()=>{ const c=document.querySelector('#swimlane-view .swimlane-container'); if(c&&document.getElementById('swimlane-view').style.display!=='none') drawSwimlaneArrows(c); },30);
+  _arrowTimer2 = setTimeout(()=>{ const c=document.querySelector('#swimlane-view .swimlane-container'); if(c&&document.getElementById('swimlane-view').style.display!=='none') drawSwimlaneArrows(c); },200);
+}
+window.addEventListener('resize',scheduleArrowRedraw);
+
+let currentView = 'default';
+function toggleView(view){
+  const dv=document.getElementById('default-view'),sv=document.getElementById('swimlane-view');
+  const btnD=document.getElementById('btn-default'),btnS=document.getElementById('btn-swimlane');
+  currentView = view;
+  if(view==='swimlane'){ buildSwimlane(); injectQuoteBars(sv); initQuoteLinks(sv); initJiraPanels(sv); injectJiraIndicators(sv); dv.style.display='none'; sv.style.display='block'; btnD.classList.remove('active'); btnS.classList.add('active'); }
+  else { dv.style.display='block'; sv.style.display='none'; btnD.classList.add('active'); btnS.classList.remove('active'); }
+  rebuildFixedHeader(); updateFixedHeader();
+}
+
+function injectQuoteBars(root){
+  root.querySelectorAll('.task-group').forEach(tg => {
+    if(tg.querySelector('.quote-bar')) return;
+    const details = tg.querySelector('.task-details'); if(!details) return;
+    const painCount = details.querySelectorAll('.card-pain .nested-quote').length;
+    const oppCount = details.querySelectorAll('.card-opp .nested-quote').length;
+    const painSugCount = details.querySelectorAll('.card-pain-sug').length;
+    const oppSugCount = details.querySelectorAll('.card-opp-sug').length;
+    const total = painCount + oppCount + painSugCount + oppSugCount; if(total===0) return;
+    const bar = document.createElement('div'); bar.className = 'quote-bar';
+    const parts = [];
+    if(painCount>0) parts.push(painCount+' pain point'+(painCount!==1?'s':''));
+    if(oppCount>0) parts.push(oppCount+' opportunit'+(oppCount!==1?'ies':'y'));
+    if(painSugCount>0) parts.push(painSugCount+' suggested pain'+(painSugCount!==1?'s':''));
+    if(oppSugCount>0) parts.push(oppSugCount+' suggested opportunit'+(oppSugCount!==1?'ies':'y'));
+    bar.title = parts.join(', ');
+    const MAX=10;
+    if(total<=MAX){
+      for(let i=0;i<painCount;i++){const c=document.createElement('div');c.className='qb-cell pain';c.style.width=(100/MAX)+'%';bar.appendChild(c);}
+      for(let i=0;i<oppCount;i++){const c=document.createElement('div');c.className='qb-cell opp';c.style.width=(100/MAX)+'%';bar.appendChild(c);}
+      for(let i=0;i<painSugCount;i++){const c=document.createElement('div');c.className='qb-cell pain-sug';c.style.width=(100/MAX)+'%';bar.appendChild(c);}
+      for(let i=0;i<oppSugCount;i++){const c=document.createElement('div');c.className='qb-cell opp-sug';c.style.width=(100/MAX)+'%';bar.appendChild(c);}
+    } else {
+      if(painCount>0){const c=document.createElement('div');c.className='qb-cell pain';c.style.width=(painCount/total*100)+'%';bar.appendChild(c);}
+      if(oppCount>0){const c=document.createElement('div');c.className='qb-cell opp';c.style.width=(oppCount/total*100)+'%';bar.appendChild(c);}
+      if(painSugCount>0){const c=document.createElement('div');c.className='qb-cell pain-sug';c.style.width=(painSugCount/total*100)+'%';bar.appendChild(c);}
+      if(oppSugCount>0){const c=document.createElement('div');c.className='qb-cell opp-sug';c.style.width=(oppSugCount/total*100)+'%';bar.appendChild(c);}
+    }
+    const taskText = tg.querySelector('.task-header .task-text');
+    if(taskText){const mr=document.createElement('div');mr.className='task-meta-row';mr.appendChild(bar);taskText.appendChild(mr);}
+  });
+}
+
+const JIRA_BADGE_SVG = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.004 2.003 7.4 6.607l2.5 2.5 2.104-2.104 4.5 4.5-2.1 2.1 2.5 2.5 4.6-4.6-9.5-9.5z" fill="#2684FF"/><path d="M4.6 9.397 2.004 12l9.5 9.5 4.6-4.6-2.5-2.5-2.1 2.1-4.5-4.5 2.1-2.1-2.504-2.503z" fill="#2684FF"/></svg>`;
+
+function injectJiraIndicators(root) {
+  (root || document).querySelectorAll('.task-group').forEach(tg => {
+    if (tg.querySelector('.task-header .jira-badge')) return;
+    let count = 0;
+    try { const d = tg.dataset.jiraItems; if (d) count = JSON.parse(d).length; } catch(e) {}
+    if (count === 0) count = tg.querySelectorAll('.task-details .jira-panel .jira-item').length;
+    if (count === 0) return;
+    const taskText = tg.querySelector('.task-header .task-text'); if (!taskText) return;
+    let metaRow = taskText.querySelector('.task-meta-row');
+    if (!metaRow) { metaRow = document.createElement('div'); metaRow.className = 'task-meta-row'; taskText.appendChild(metaRow); }
+    const badge = document.createElement('div');
+    badge.className = 'jira-badge';
+    badge.title = count + ' linked Jira issue' + (count !== 1 ? 's' : '');
+    badge.innerHTML = JIRA_BADGE_SVG + count;
+    metaRow.appendChild(badge);
+  });
+}
+
+function buildFixedHeaderForDefault(){
+  const inner=document.getElementById('fixedHeaderInner'); inner.innerHTML='';
+  const mapRow=document.querySelector('#default-view .map-row'); if(!mapRow) return;
+  const groups=mapRow.querySelectorAll('.activity-group');
+  groups.forEach((group,gi)=>{
+    if(gi>0){const d=document.createElement('div');d.className='fh-divider';inner.appendChild(d);}
+    const fg=document.createElement('div');fg.className='fh-activity-group';
+    const label=group.querySelector('.activity-label'); if(label) fg.appendChild(label.cloneNode(true));
+    const stepRow=document.createElement('div');stepRow.className='fh-step-row';
+    group.querySelectorAll('.step-col > .card-step').forEach(card=>{const w=document.createElement('div');w.className='fh-step-card';w.appendChild(card.cloneNode(true));stepRow.appendChild(w);});
+    fg.appendChild(stepRow);inner.appendChild(fg);
+  });
+}
+
+function buildFixedHeaderForSwimlane(){
+  const inner=document.getElementById('fixedHeaderInner'); inner.innerHTML='';
+  const slHeader=document.querySelector('#swimlane-view .sl-header-row'); if(!slHeader) return;
+  const clone=slHeader.cloneNode(true); while(clone.firstChild) inner.appendChild(clone.firstChild);
+}
+
+function updateFixedHeader(){
+  const fh=document.getElementById('fixedHeader');
+  let sourceEl;
+  if(currentView==='default') sourceEl=document.querySelector('#default-view .map-row');
+  else sourceEl=document.querySelector('#swimlane-view .sl-header-row');
+  if(!sourceEl){fh.classList.remove('visible');return;}
+  const sourceRect=sourceEl.getBoundingClientRect();
+  if(sourceRect.top<0){fh.classList.add('visible');document.getElementById('fixedHeaderInner').style.transform=`translateX(${-window.scrollX}px)`;}
+  else {fh.classList.remove('visible');}
+}
+
+function rebuildFixedHeader(){
+  const fh=document.getElementById('fixedHeader');
+  if(currentView==='default'){fh.classList.remove('sl-mode');buildFixedHeaderForDefault();}
+  else {fh.classList.add('sl-mode');buildFixedHeaderForSwimlane();}
+}
+
+window.addEventListener('scroll',updateFixedHeader,{passive:true});
+window.addEventListener('resize',()=>{rebuildFixedHeader();updateFixedHeader();});
+
+const EDIT_SELECTORS = ['.page-header h1','.page-header > p:not(#meta-row)','.goal-chip','.task-header .task-text','.card.card-pain','.card.card-opp','.card-step .card-title'];
+let editModeActive = false;
+
+function toggleEditMode() {
+  editModeActive = !editModeActive;
+  document.body.classList.toggle('edit-mode', editModeActive);
+  const btn = document.getElementById('btn-edit');
+  if (editModeActive) {
+    EDIT_SELECTORS.forEach(sel => { document.querySelectorAll(sel).forEach(el => { el.contentEditable = 'true'; el.spellcheck = false; }); });
+    if (btn) { btn.textContent = 'Exit Edit Mode'; btn.classList.add('active'); }
+  } else {
+    document.querySelectorAll('[contenteditable="true"]').forEach(el => { el.removeAttribute('contenteditable'); });
+    if (btn) { btn.textContent = 'Edit Map'; btn.classList.remove('active'); }
+  }
+}
+
+function exportMap() {
+  const jsonEl = document.getElementById('journey-data');
+  if (jsonEl) { try { const data = JSON.parse(jsonEl.textContent); data.lastUpdated = new Date().toISOString().split('T')[0]; jsonEl.textContent = JSON.stringify(data, null, 2); const metaRow = document.getElementById('meta-row'); if (metaRow) metaRow.textContent = 'Last updated: ' + data.lastUpdated; } catch(e) {} }
+  const wasEditing = editModeActive;
+  if (wasEditing) { document.querySelectorAll('[contenteditable="true"]').forEach(el => el.removeAttribute('contenteditable')); document.body.classList.remove('edit-mode'); }
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  if (wasEditing) { document.body.classList.add('edit-mode'); EDIT_SELECTORS.forEach(sel => { document.querySelectorAll(sel).forEach(el => { el.contentEditable = 'true'; el.spellcheck = false; }); }); }
+  const title = document.querySelector('h1')?.textContent?.trim() || 'journey-map';
+  const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.html';
+  const blob = new Blob([html], {type: 'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleTaskHeaderClick(e, header) {
+  if (e.target.closest('.task-quote-link')) return;
+  header.parentElement.classList.toggle('open');
+  scheduleArrowRedraw();
+}
+
+function toggleQuotePopover(e, btn) {
+  e.stopPropagation();
+  const isOpen = btn.classList.contains('popover-open');
+  document.querySelectorAll('.task-quote-link.popover-open').forEach(b => b.classList.remove('popover-open'));
+  if (isOpen) return;
+  const taskGroup = btn.closest('.task-group');
+  const quotes = taskGroup ? [...taskGroup.querySelectorAll('.task-details .nested-quote')] : [];
+  const popover = btn.querySelector('.quote-popover');
+  if (!popover) return;
+  while (popover.children.length > 1) popover.removeChild(popover.lastChild);
+  if (quotes.length === 0) { const empty = document.createElement('div'); empty.style.cssText = 'font-size:11px;color:#AAA69E;font-style:italic'; empty.textContent = 'No source quotes for this task.'; popover.appendChild(empty); }
+  else { quotes.forEach(q => { const clone = q.cloneNode(true); clone.style.display = ''; popover.appendChild(clone); }); }
+  btn.classList.add('popover-open');
+}
+
+document.addEventListener('click', (e) => { if (!e.target.closest('.task-quote-link')) { document.querySelectorAll('.task-quote-link.popover-open').forEach(b => b.classList.remove('popover-open')); } }, true);
+
+const JIRA_TYPE_LABELS = { epic:'E', story:'S', bug:'B', task:'T', project:'P' };
+const JIRA_ICON_SVG = `<svg class="jira-panel-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.004 2.003 7.4 6.607l2.5 2.5 2.104-2.104 4.5 4.5-2.1 2.1 2.5 2.5 4.6-4.6-9.5-9.5z" fill="#2684FF"/><path d="M4.6 9.397 2.004 12l9.5 9.5 4.6-4.6-2.5-2.5-2.1 2.1-4.5-4.5 2.1-2.1-2.504-2.503z" fill="#2684FF"/></svg>`;
+
+function initJiraPanels(root) {
+  (root || document).querySelectorAll('.task-group[data-jira-items]').forEach(tg => {
+    let items; try { items = JSON.parse(tg.dataset.jiraItems); } catch(e) { return; }
+    if (!Array.isArray(items) || items.length === 0) return;
+    let panel = tg.querySelector('.jira-panel');
+    if (!panel) { panel = document.createElement('div'); panel.className = 'jira-panel'; panel.dataset.init = '1'; panel.innerHTML = `<div class="jira-panel-header">${JIRA_ICON_SVG}Related Jira Issues<span class="jira-panel-toggle">▶</span></div><div class="jira-panel-body"></div>`; panel.querySelector('.jira-panel-header').addEventListener('click', () => panel.classList.toggle('open')); const details = tg.querySelector('.task-details'); if (details) details.appendChild(panel); }
+    const body = panel.querySelector('.jira-panel-body'); if (!body) return; body.innerHTML = '';
+    items.forEach(item => { const type = (item.type || 'task').toLowerCase(); const statusClass = item.status ? item.status.toLowerCase().replace(/\s+/g, '-') : 'todo'; const el = item.url ? document.createElement('a') : document.createElement('div'); el.className = 'jira-item'; if (item.url) { el.href = item.url; el.target = '_blank'; el.rel = 'noopener noreferrer'; } el.innerHTML = `<div class="jira-item-type ${type}">${JIRA_TYPE_LABELS[type] || type[0].toUpperCase()}</div><div class="jira-item-meta">${item.key ? `<div class="jira-item-key">${item.key}</div>` : ''}<div class="jira-item-title">${item.title || '(untitled)'}</div>${item.status ? `<span class="jira-item-status ${statusClass}">${item.status}</span>` : ''}</div>`; body.appendChild(el); });
+    const h = panel.querySelector('.jira-panel-header'); if (h) h.innerHTML = `${JIRA_ICON_SVG}Related Jira Issues <span style="color:#78909C;font-weight:400">(${items.length})</span><span class="jira-panel-toggle">▶</span>`;
+  });
+  (root || document).querySelectorAll('.jira-panel:not([data-init])').forEach(panel => {
+    panel.dataset.init = '1';
+    if (!panel.querySelector('.jira-panel-header')) return;
+    if (!panel.hasAttribute('data-no-click')) { panel.querySelector('.jira-panel-header').addEventListener('click', () => panel.classList.toggle('open')); }
+    const count = panel.querySelectorAll('.jira-item').length;
+    if (count > 0) { const h = panel.querySelector('.jira-panel-header'); if (h && !h.querySelector('.jira-count')) { const countSpan = document.createElement('span'); countSpan.className = 'jira-count'; countSpan.style.cssText = 'color:#78909C;font-weight:400;margin-left:3px'; countSpan.textContent = `(${count})`; const toggle = h.querySelector('.jira-panel-toggle'); h.insertBefore(countSpan, toggle); } }
+  });
+}
+
+function initQuoteLinks(root) {
+  (root || document).querySelectorAll('.task-group').forEach(tg => {
+    const header = tg.querySelector('.task-header');
+    if (!header || header.querySelector('.task-quote-link')) return;
+    const quotes = tg.querySelectorAll('.task-details .nested-quote');
+    if (quotes.length === 0) return;
+    const btn = document.createElement('button');
+    btn.className = 'task-quote-link';
+    btn.title = `${quotes.length} source quote${quotes.length !== 1 ? 's' : ''}`;
+    btn.setAttribute('onclick', 'toggleQuotePopover(event,this)');
+    btn.innerHTML = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-2 2-2-2H3a1 1 0 0 1-1-1V3zm3 2a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H5z"/></svg><div class="quote-popover"><div class="quote-popover-title">Source Quotes</div></div>`;
+    const toggle = header.querySelector('.toggle');
+    if (toggle) header.insertBefore(btn, toggle); else header.appendChild(btn);
+    header.onclick = function(e) { handleTaskHeaderClick(e, this); };
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initFromJSON();
+  buildLegend();
+  injectQuoteBars(document.getElementById('default-view'));
+  initQuoteLinks(document.getElementById('default-view'));
+  initJiraPanels(document.getElementById('default-view'));
+  injectJiraIndicators(document.getElementById('default-view'));
+  updateStatsBar();
+  rebuildFixedHeader();
+  const sv = document.getElementById('swimlane-view');
+  const observer = new MutationObserver(scheduleArrowRedraw);
+  observer.observe(sv, {attributes:true, attributeFilter:['class'], subtree:true, childList:true});
+});
+
+document.querySelector('.controls').addEventListener('click', () => { scheduleArrowRedraw(); });
+</script>
+</body>
+</html>

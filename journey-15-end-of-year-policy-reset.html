@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Map — End-of-Year Policy Reset</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root{--bg:#E8E6E1;--text:#1A1A1A;--text-muted:#5A5751;--card-task:#FFF9C4;--card-task-border:#E8DF8A;--card-pain:#FFCDD2;--card-pain-border:#EF9A9A;--card-step:#D1C4E9;--card-step-border:#B39DDB;--card-opp:#C8E6C9;--card-opp-border:#A5D6A7;--activity-bg:#1A1A1A;--grid-line:#D5D2CC;--shadow:#D4D1CC20;--col-w:280px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:auto}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;opacity:.4;pointer-events:none;z-index:0}
+  .page{position:relative;z-index:1;padding:32px 32px 60px;min-width:max-content}
+  .page-header{margin-bottom:20px;max-width:800px}
+  .page-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+  .page-header p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+  .meta-row{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .top-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .goal-chip{background:var(--activity-bg);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;line-height:1.4;white-space:nowrap}
+  .goal-chip span{color:#90CAF9;font-weight:700;margin-right:4px}
+  .legend{display:flex;gap:16px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-muted);flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:16px;height:11px;border-radius:3px;border:1px solid #ccc}
+  .stats-bar{display:flex;gap:18px;margin-bottom:14px;font-size:11px;font-weight:600;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:5px;color:var(--text-muted)}
+  .stat-item::before{font-size:9px}
+  .stat-item.pain::before{content:'⬤';color:#EF5350}
+  .stat-item.opp::before{content:'⬤';color:#66BB6A}
+  .stat-item.tasks::before{content:'⬤';color:#7E57C2}
+  .controls{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:#fff;border:1.5px solid var(--grid-line);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .controls button:hover{background:#f0efec;border-color:#bbb}
+  .controls button.active{background:var(--activity-bg);color:#fff;border-color:var(--activity-bg)}
+  .controls-sep{width:1px;height:20px;background:var(--grid-line);margin:0 4px}
+  .actor-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .map-row{display:flex;align-items:flex-start;gap:0}
+  .activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .activity-label{background:var(--activity-bg);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px var(--shadow);margin-bottom:8px}
+  .activity-num{background:rgba(255,255,255,.15);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .activity-cols{display:flex;gap:24px;align-items:flex-start}
+  .activity-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;border-radius:1px;margin:0 24px}
+  .step-col{width:var(--col-w);min-width:var(--col-w);display:flex;flex-direction:column;gap:16px}
+  .fixed-header-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);box-shadow:0 4px 16px rgba(0,0,0,.1);padding:8px 32px 10px;display:none;overflow:hidden}
+  .fixed-header-bar.visible{display:block}
+  .fh-inner{display:flex;align-items:flex-end;gap:0;min-width:max-content}
+  .fh-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .fh-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .fh-step-row{display:flex;gap:24px}
+  .fh-step-card{width:var(--col-w);min-width:var(--col-w)}
+  .card{border-radius:7px;padding:9px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow)}
+  .card-step{background:var(--card-step);border:1.5px solid var(--card-step-border)}
+  .card-step .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5E35B1;margin-bottom:3px}
+  .card-step .card-title{font-size:14px;font-weight:700;color:#311B92;line-height:1.3}
+  .task-group{display:flex;flex-direction:column}
+  .task-header{background:var(--card-task);border:1.5px solid var(--card-task-border);border-radius:7px;padding:8px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow);cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:7px;position:relative;z-index:2}
+  .task-header:hover{filter:brightness(.97)}
+  .task-group.open .task-header{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  .task-header .toggle{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8D7B00;margin-top:1px;transition:transform .2s;order:2;margin-left:auto}
+  .task-group.open .task-header .toggle{transform:rotate(90deg)}
+  .task-header .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8D7B00;margin-bottom:1px}
+  .task-header .task-text{flex:1;order:1}
+  .task-details{display:none;flex-direction:column;gap:8px;padding:8px;margin-top:-1px;background:#FDF8D8;border:1.5px solid var(--card-task-border);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;position:relative;z-index:1}
+  .task-group.open .task-details{display:flex;animation:expandPanel .15s ease-out forwards}
+  .task-group.open .task-details>*{opacity:0;animation:fadeInChild .12s ease-out forwards;animation-delay:.1s}
+  .task-group.open .task-details>*:nth-child(2){animation-delay:.13s}
+  .task-group.open .task-details>*:nth-child(3){animation-delay:.16s}
+  .task-group.open .task-details>*:nth-child(n+4){animation-delay:.19s}
+  @keyframes expandPanel{from{max-height:0;opacity:.5;padding-top:0;padding-bottom:0}to{max-height:2000px;opacity:1;padding-top:8px;padding-bottom:8px}}
+  @keyframes fadeInChild{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .card-pain{background:var(--card-pain);border:1.5px solid var(--card-pain-border)}
+  .card-pain .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp{background:var(--card-opp);border:1.5px solid var(--card-opp-border)}
+  .card-opp .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .card-pain-sug{background:#FFF3F2;border:1.5px dashed #EF9A9A}
+  .card-pain-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp-sug{background:#F2FAF2;border:1.5px dashed #A5D6A7}
+  .card-opp-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .nested-quote{margin-top:6px;padding:6px 9px;border-radius:5px;background:#F5F4F0;border:1px solid #E0DED8;font-style:italic;font-size:14px;line-height:1.4;color:var(--text)}
+  .nested-quote+.nested-quote{margin-top:4px}
+  .quote-source-badge{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;vertical-align:middle;font-style:normal}
+  .nested-quote[data-source="community"] .quote-source-badge{background:#F3E5F5;color:#6A1B9A}
+  .nested-quote[data-source="feedback"] .quote-source-badge{background:#FFF8E1;color:#F57F17}
+  .nested-quote[data-source="interview"] .quote-source-badge{background:#E3F2FD;color:#1565C0}
+  .quote-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;gap:0}
+  .quote-bar .qb-cell{height:100%;min-width:0}
+  .quote-bar .qb-cell.pain{background:#EF5350}
+  .quote-bar .qb-cell.opp{background:#66BB6A}
+  .quote-bar .qb-cell.pain-sug{background:transparent;border:1.5px solid #EF5350;box-sizing:border-box}
+  .quote-bar .qb-cell.opp-sug{background:transparent;border:1.5px solid #66BB6A;box-sizing:border-box}
+  .quote-bar .qb-cell:first-child{border-radius:3px 0 0 3px}
+  .quote-bar .qb-cell:last-child{border-radius:0 3px 3px 0}
+  .quote-bar .qb-cell:first-child:last-child{border-radius:3px}
+  .task-group.open .quote-bar{display:none}
+  .task-meta-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .task-meta-row .quote-bar{flex:1;margin-top:0}
+  .task-group.open .task-meta-row{display:none}
+  .task-quote-link{flex-shrink:0;order:3;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:#8D7B00;opacity:.7;position:relative;transition:opacity .15s,background .15s;margin-top:1px;background:transparent;border:none;padding:0;font-family:inherit}
+  .task-quote-link:hover{opacity:1;background:rgba(141,123,0,.12)}
+  .task-quote-link svg{width:13px;height:13px;fill:currentColor}
+  .quote-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;background:#fff;border:1.5px solid #E0DED8;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.13);padding:10px 12px;min-width:220px;max-width:320px;display:none;flex-direction:column;gap:6px;font-style:normal}
+  .task-quote-link.popover-open .quote-popover{display:flex}
+  .quote-popover-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#AAA69E;margin-bottom:2px}
+  .edit-notice{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--activity-bg);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;gap:12px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap}
+  body.edit-mode .edit-notice{display:flex}
+  .edit-notice button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  body.edit-mode [contenteditable="true"]{outline:1.5px dashed #7E57C2;outline-offset:2px;border-radius:3px;cursor:text}
+  body.edit-mode [contenteditable="true"]:focus{outline:2px solid #7E57C2;background:rgba(126,87,194,.06)}
+  body::-webkit-scrollbar{height:10px}
+  body::-webkit-scrollbar-track{background:#D5D2CC}
+  body::-webkit-scrollbar-thumb{background:#AAA69E;border-radius:5px}
+  #swimlane-view{display:none}
+  .swimlane-container{min-width:max-content;padding-top:8px;position:relative}
+  .sl-header-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px}
+  .sl-corner{width:150px;min-width:150px}
+  .sl-header-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .sl-step-headers{display:flex;gap:24px}
+  .sl-header-divider,.sl-cell-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-actor-row{display:flex;gap:0;align-items:flex-start;min-height:60px}
+  .sl-actor-row+.sl-actor-row{border-top:1px solid #D5D2CC;padding-top:8px}
+  .sl-actor-label{width:150px;min-width:150px;padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:flex-start;gap:6px;position:sticky;left:0;background:var(--bg);z-index:8;align-self:stretch}
+  .sl-actor-label .al-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .sl-actor-cells{display:flex;gap:0;align-items:flex-start}
+  .sl-activity-cell-group{display:flex;gap:24px;align-items:flex-start}
+  .sl-step-cell{min-width:var(--col-w);width:var(--col-w);padding:16px 0;display:flex;flex-direction:column;gap:16px}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;padding:6px 12px;background:#1A1A1A;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">&larr; Back to Journey Index</a>
+  <div class="page-header">
+    <h1>End-of-Year Policy Reset</h1>
+    <p>How a clinic prepares its insurance policies for January 1 — identifying which patients need policy resets, resetting deductibles and visit counts, linking new policy versions to already-scheduled appointments, and handling the fallout when the reset is missed or done late. One of the most universally dreaded annual tasks in insurance billing. Signal from #support_usa_billing, #support_ca_manualtherapy_toques, #jane_community_posts_fb, #product-insights, #hot_seat_support, and direct biller interviews.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="goal-chip"><span>G1</span> Every patient's deductible, visit count, and copay are correctly zeroed/updated before January 1 without visiting each record individually</div>
+    <div class="goal-chip"><span>G2</span> Already-scheduled January appointments automatically reflect the new policy — no appointment-by-appointment manual update</div>
+    <div class="goal-chip"><span>G3</span> Clinics that miss the reset deadline have a clear recovery path that doesn't require re-doing all affected appointments</div>
+  </div>
+
+  <div id="legend" class="legend"></div>
+  <div id="stats-bar" class="stats-bar"></div>
+
+  <div class="controls">
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.add('open'))">Expand All</button>
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.remove('open'))">Collapse All</button>
+    <div class="controls-sep"></div>
+    <button id="btn-default" class="active" onclick="toggleView('default')">Column View</button>
+    <button id="btn-swimlane" onclick="toggleView('swimlane')">Swimlane View</button>
+    <div class="controls-sep"></div>
+    <button id="src-all" class="source-filter-btn active" onclick="filterBySource('all',this)">All Sources</button>
+    <button id="src-community" class="source-filter-btn" onclick="filterBySource('community',this)">Community</button>
+    <button id="src-feedback" class="source-filter-btn" onclick="filterBySource('feedback',this)">Feedback</button>
+    <div class="controls-sep"></div>
+    <button id="btn-edit" onclick="toggleEditMode()">Edit Map</button>
+    <button onclick="exportMap()">&#8595; Download</button>
+  </div>
+
+  <div class="fixed-header-bar" id="fixedHeader"><div class="fh-inner" id="fixedHeaderInner"></div></div>
+
+  <div id="default-view">
+  <div class="map-row">
+
+<!-- ACTIVITY 0: PREPARE BEFORE YEAR-END -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">0</div>Prepare Before Year-End (December)</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.1</div><div class="card-title">Identify all active patients with insurance policies that need to be reset for the new year</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Identify every patient with an active insurance policy — there is no built-in "reset checklist" in Jane</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no Jane-native list of "policies that need to be reset for the new year." Billers must either know their patient list from memory or manually review the insurer pages patient by patient to identify who has an active policy with deductibles or visit counts that will reset January 1<div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"I despite January. I literally have to check every single person." — Biller interview, quoted in #product-insights and #design</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A year-end policy reset checklist — surfaced automatically in December as a Jane task — listing every patient with an active insurance policy and their current deductible / visit count values, with a bulk-reset action, would transform a multi-day manual task into a single guided workflow.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Pro-active workaround: create new "2026 policy" records ahead of time, attach them to pre-booked recurring appointments</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>The most advanced workaround billers have discovered is pre-creating 2026 policy records in December and manually swapping them onto recurring future appointments — treating policy records like versioned documents. This is an effective pattern but entirely user-discovered; Jane doesn't guide billers toward it.<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Katie Rau shared that her clinic has started creating the new policies ahead of time (e.g., '2026 insurance') and uses those for next year's recurring appointments." — Community digest, #jane_community_posts_fb</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 1: RESET POLICIES IN JANE -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">1</div>Reset Policies in Jane</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.1</div><div class="card-title">Navigate to Insurer → Insurance Policies and use "Reset for 2026" on each patient policy</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Go to Billing → Insurers → select insurer → Insurance Policies → select patient policies → "Reset for 2026"</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>The "Reset for [year]" feature — accessible from the insurer's policy list — does exist and creates a new versioned policy record for the new year, keeping 2025 claims associated with the 2025 policy. It can also be done in bulk by selecting multiple patients at once on the insurer page.</div>
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The "Reset for year" feature is insurer-scoped — you can only bulk-reset policies for one insurer at a time. A clinic with patients on multiple insurers (Aetna, BCBS, Medicare, United) must repeat this workflow for every insurer separately. There is no cross-insurer bulk reset<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"They could reset the secondary first and then reset Medicare. They would just need to ensure that the reset policies are linked to 2026 appointments." — Lee-Anne, #hot_seat_support</div></div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Manually zero out deductible amounts for each patient whose deductible resets — separate from the policy reset</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Resetting the policy creates a new policy version but does not automatically zero the deductible amount to $0 — that is a separate manual step for each patient. Billers must remember to also change the deductible to zero and add a note, then remember to reset it again at the start of each new year<div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"Change all deductibles to zero. Make a note on it. Then I have to remember in the beginning of the year to reset everybody. In order for Jane to recognize that the person doesn't owe anything, I would have to set deductibles to zero on each appointment, so I just do it at the insurance level." — Biller interview, #product-insights</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>As part of the "Reset for year" flow, Jane could prompt: "Would you like to reset the deductible to $0 for this patient's new policy? This is correct for most plans that reset January 1." — making the deductible zeroing part of the reset action rather than a separate remembered step.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.2</div><div class="card-title">Reset visit counts — if the clinic tracks them manually in the policy</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Reset the visit count field on each policy to reflect the new plan year's allowed visits</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>The policy reset does carry over the visit count reset as part of the new versioned policy — this is one area where the existing reset flow does provide meaningful continuity. The 2025 policy retains its visit count history; the new 2026 policy starts fresh.</div>
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Visit counts in Jane policies are manually maintained — Jane does not track visits consumed against a policy visit limit automatically. If a biller forgets to update the visit count or enters it incorrectly, there's no system safeguard. The only way to catch this is a manual audit.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 2: LINK NEW POLICY TO SCHEDULED APPOINTMENTS -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">2</div>Link New Policy to Already-Scheduled January Appointments</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.1</div><div class="card-title">New policy does NOT automatically attach to future appointments — biller must update each one</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>For every pre-booked January appointment: remove the old policy, re-add the new 2026 policy</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>After resetting a policy, every already-scheduled appointment still holds the old 2025 policy. Jane does not propagate the new policy to future appointments — the biller must manually remove and re-add the insurance on each upcoming visit. For clinics with large recurring appointment books this is a multi-day task<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Sonya Olsen raised that when a patient's insurance changes, Jane doesn't automatically update future appointments. For clinics with many pre-booked appointments, changing each one manually is very time-consuming. She suggested it would be nice if there were an option to 'update all future appointments.'" — Community digest, #jane_community_posts_fb</div></div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>A "propagate to future appointments" option — offered at the point of policy reset — asking "This patient has X appointments after January 1. Would you like to attach the new policy to all of them?" would eliminate the biggest labour cost of the annual reset and is the most-requested feature in this space.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Confirm that updating copay on the policy also doesn't propagate to scheduled appointments</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>This is not limited to year-end — any time a copay or coverage amount is changed on an existing policy, Jane does not ask if the change should apply to already-scheduled appointments. Billers must either update scheduled appointments manually or remove/re-add the policy on each one. This is explicitly on the Insurance Foundations design debt backlog<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"If I change the co-pay, it doesn't ask me if I want to apply to next appointments and it should, because then I have to do it manually." — Biller interview, #product-insights (confirmed on design debt backlog by John Whaley)</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "schedule this change" option — letting billers set an effective date for policy changes so they take effect automatically on future appointments booked on or after that date — would solve both the year-end reset propagation problem and the mid-year copay update problem in one feature.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 3: WHAT HAPPENS IF THE RESET IS MISSED -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">3</div>Recovery: When the Reset Is Missed or Done Late</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.1</div><div class="card-title">Clinic submits January claims on the old 2025 policy — deductibles and counts are wrong on all claims</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Discover the problem when deductible amounts don't match ERA responses in January</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>When a clinic misses the reset, January claims are submitted on the old policy with end-of-year accumulated deductibles. The ERA comes back showing the full new-year deductible — but the EOB in Jane is pre-filled with the old carryover deductible — and the biller must manually correct every EOB to match the ERA<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"They missed this step and had to go back and correct everything. They are now finding that the deductible and allowed amount are not populating correctly and they have to update their EOBs manually." — Chelsea, #support_us_medical_trailblazers</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>An early-January alert — "It looks like some of your patients' policies haven't been reset yet for the new year. Would you like to reset them now?" — would catch clinics that miss the December window before they submit a large batch of incorrectly-configured January claims.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Reset the policy now — but the deductible on already-arrived appointments must still be manually corrected</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Even after a late reset, arrived appointments that were processed on the old policy retain the old deductible value. Removing and re-adding the insurance policy on an arrived appointment is necessary but still doesn't automatically update the deductible value in the claim — the biller must also update the EOB manually for each affected visit<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"They've removed the deductible from the policy but re-adding the policy to the appointment still reflects the deductible from before it was removed. Is removing the whole policy and then re-adding it still the only way to resolve this? That seems like a nuclear option." — Jordan, #support_usa_billing</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.2</div><div class="card-title">January deductible resets cause confusing EOB discrepancies — patient and clinic both confused</div></div>
+
+      <div class="task-group" data-actor="admin" data-activity="3" data-step="3.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Explain to patients why their January invoice looks different — deductible reset means they owe more than usual</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Every January, clinics receive a wave of patient confusion about why their covered amount dropped. The deductible reset means patients who had a fully-met deductible in December suddenly owe their full deductible again. Deductibles don't display prominently in patient communications from Jane, leaving the front desk to explain this reactively<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"With January comes insurance resets, and many insurers apply a deductible at this time of year. The amount shown as 'covered' has the patient's deductible subtracted from it, which can make the patient portion look a bit funky." — Liz, #support_ca_manualtherapy_toques</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A patient-facing message or appointment confirmation note — "Note: your insurance deductible resets January 1. Your patient responsibility for this visit may be higher than usual until your deductible is met." — would proactively set expectations and reduce front-desk explanation calls in the first two months of every year.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 4: FUTURE-DATED POLICY CHANGES — THE BROADER DESIGN GAP -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">4</div>The Broader Design Gap — Scheduled Policy Changes</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.1</div><div class="card-title">Jane has no mechanism to schedule a policy change to take effect on a future date</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Attempt to schedule a copay rate change to take effect January 1 — must be done manually on the day</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no way in Jane to schedule a policy change to take effect on a future date — a clinic wanting to update a CPT rate or copay for the new year must make the change on exactly January 1 or accept that early-January appointments will be wrong. This is a known product gap explicitly flagged by John Whaley<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"One thing Jane doesn't do very well today is help clinics with these future-oriented updates — things like wanting to update CPT rates, or change the default copay for a patient policy. A clinic might want to update their rates and have that take effect on a certain date, but there's no way to 'schedule' that in Jane." — John Whaley, #pt-insurance-setup</div></div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Scheduled (future-dated) policy changes — set in advance, taking effect automatically on a specified date — would solve the year-end reset entirely for most clinics: set the new copay and deductible in December, effective January 1, and let Jane handle the rest. This is the complete solution to the problem rather than the current workaround-based approach.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div>
+  </div>
+  <div id="swimlane-view"></div>
+</div>
+
+<div class="edit-notice" id="editNotice">✏ Edit Mode — click any text to edit<button onclick="toggleEditMode()">Exit Edit Mode</button></div>
+
+<script type="application/json" id="journey-data">
+{
+  "title": "End-of-Year Policy Reset",
+  "subtitle": "How a clinic prepares insurance policies for January 1 — resetting deductibles, visit counts, and copays, and linking new policy versions to already-scheduled appointments.",
+  "version": "1.0",
+  "lastUpdated": "2026-03-10",
+  "goals": [
+    {"id": "G1", "text": "Every patient's deductible, visit count, and copay are correctly updated before January 1 without visiting each record individually"},
+    {"id": "G2", "text": "Already-scheduled January appointments automatically reflect the new policy — no appointment-by-appointment manual update"},
+    {"id": "G3", "text": "Clinics that miss the reset deadline have a clear recovery path that doesn't require re-doing all affected appointments"}
+  ],
+  "actors": [
+    {"id": "biller", "label": "Biller", "emoji": "🧾", "bg": "#F8BBD0", "color": "#880E4F"},
+    {"id": "admin", "label": "Clinic Admin", "emoji": "👩‍💼", "bg": "#FFE0B2", "color": "#E65100"}
+  ],
+  "activities": [
+    {"num": "0", "name": "Prepare Before Year-End (December)", "steps": [
+      {"id": "0.1", "title": "Identify all active patients who need policy resets"}
+    ]},
+    {"num": "1", "name": "Reset Policies in Jane", "steps": [
+      {"id": "1.1", "title": "Use Reset for 2026 per insurer + zero deductibles"},
+      {"id": "1.2", "title": "Reset visit counts on new policy"}
+    ]},
+    {"num": "2", "name": "Link New Policy to Scheduled January Appointments", "steps": [
+      {"id": "2.1", "title": "Manually remove old policy & re-add new policy to each appointment"}
+    ]},
+    {"num": "3", "name": "Recovery: When the Reset Is Missed or Done Late", "steps": [
+      {"id": "3.1", "title": "Discover problem via ERA mismatch — manual EOB correction for every claim"},
+      {"id": "3.2", "title": "Explain January deductible reset to confused patients"}
+    ]},
+    {"num": "4", "name": "The Broader Design Gap — Scheduled Policy Changes", "steps": [
+      {"id": "4.1", "title": "No mechanism to schedule a policy change to take effect on a future date"}
+    ]}
+  ]
+}
+</script>
+
+<script>
+let actors=[],activitiesWithSteps=[];
+function initFromJSON(){const j=document.getElementById('journey-data');if(!j)return;try{const d=JSON.parse(j.textContent);actors=(d.actors||[]).map(a=>({id:a.id,label:(a.emoji?a.emoji+' ':'')+a.label,color:a.bg}));activitiesWithSteps=(d.activities||[]).map(a=>({num:a.num,name:a.name,steps:(a.steps||[]).map(s=>({id:s.id,title:s.title}))}));if(d.lastUpdated){const h=document.querySelector('.page-header');if(h&&!document.getElementById('meta-row')){const m=document.createElement('p');m.id='meta-row';m.className='meta-row';m.textContent='Last updated: '+d.lastUpdated;h.appendChild(m);}}}catch(e){}}
+function buildLegend(){const l=document.getElementById('legend');if(!l)return;let h=`<div class="legend-item"><div class="legend-swatch" style="background:var(--card-step)"></div> Step</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-task)"></div> Task</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-pain)"></div> Pain Point</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-opp)"></div> Opportunity</div><div class="legend-item"><div class="legend-swatch" style="background:#FFF3F2;border:1.5px dashed #EF9A9A"></div> Suggested Pain</div><div class="legend-item"><div class="legend-swatch" style="background:#F2FAF2;border:1.5px dashed #A5D6A7"></div> Suggested Opp</div>`;if(actors.length){h+='<div class="legend-item" style="margin-left:8px;width:1px;height:11px;background:#ccc"></div>';actors.forEach(a=>{h+=`<div class="legend-item"><div class="legend-swatch" style="background:${a.color}"></div> ${a.label}</div>`;});}l.innerHTML=h;}
+function updateStatsBar(){const b=document.getElementById('stats-bar');if(!b)return;const t=document.querySelectorAll('#default-view .task-group').length;let p=0,o=0,s=0;document.querySelectorAll('#default-view .card-pain').forEach(c=>{if(c.closest('.task-details'))p++;});document.querySelectorAll('#default-view .card-opp').forEach(c=>{if(c.closest('.task-details'))o++;});document.querySelectorAll('#default-view .card-pain-sug,#default-view .card-opp-sug').forEach(c=>{if(c.closest('.task-details'))s++;});b.innerHTML=`<div class="stat-item tasks">${t} tasks</div><div class="stat-item pain">${p} pain points</div><div class="stat-item opp">${o} opportunities</div><div class="stat-item" style="color:var(--text-muted)">${s} suggestions</div>`;}
+function handleTaskHeaderClick(e,el){if(e.target.closest('.task-quote-link'))return;el.closest('.task-group').classList.toggle('open');}
+function toggleQuotePopover(e,btn){e.stopPropagation();const open=btn.classList.contains('popover-open');document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));if(!open)btn.classList.add('popover-open');}
+document.addEventListener('click',()=>{document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));});
+function injectQuoteBars(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header'),details=tg.querySelector('.task-details');if(!header||!details)return;const p=details.querySelectorAll('.card-pain .nested-quote').length,o=details.querySelectorAll('.card-opp .nested-quote').length,ps=details.querySelectorAll('.card-pain-sug').length,os=details.querySelectorAll('.card-opp-sug').length;if(p+o+ps+os===0)return;let mr=header.querySelector('.task-meta-row');if(!mr){mr=document.createElement('div');mr.className='task-meta-row';header.querySelector('.task-text').appendChild(mr);}let bar=mr.querySelector('.quote-bar');if(!bar){bar=document.createElement('div');bar.className='quote-bar';mr.appendChild(bar);}bar.innerHTML='';const add=(cls,n)=>{if(n<=0)return;const c=document.createElement('div');c.className='qb-cell '+cls;c.style.flex=n;bar.appendChild(c);};add('pain',p);add('opp',o);add('pain-sug',ps);add('opp-sug',os);});}
+function filterBySource(s,btn){document.querySelectorAll('.source-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.nested-quote').forEach(q=>{q.style.display=(s==='all'||q.dataset.source===s)?'':'none';});injectQuoteBars(document.getElementById('default-view'));}
+function toggleView(v){const dv=document.getElementById('default-view'),sv=document.getElementById('swimlane-view'),bd=document.getElementById('btn-default'),bs=document.getElementById('btn-swimlane');if(v==='default'){dv.style.display='';sv.style.display='none';bd.classList.add('active');bs.classList.remove('active');rebuildFixedHeader();}else{dv.style.display='none';sv.style.display='';bd.classList.remove('active');bs.classList.add('active');buildSwimlane();}}
+function buildSwimlane(){const sv=document.getElementById('swimlane-view');sv.innerHTML='';const cont=document.createElement('div');cont.className='swimlane-container';const hr=document.createElement('div');hr.className='sl-header-row';const corner=document.createElement('div');corner.className='sl-corner';hr.appendChild(corner);activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-header-divider';hr.appendChild(d);}const ag=document.createElement('div');ag.className='sl-header-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='sl-step-headers';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);hr.appendChild(ag);});cont.appendChild(hr);actors.forEach(actor=>{const row=document.createElement('div');row.className='sl-actor-row';const lbl=document.createElement('div');lbl.className='sl-actor-label';lbl.innerHTML=`<div class="al-dot" style="background:${actor.color}"></div><span>${actor.label}</span>`;row.appendChild(lbl);const cells=document.createElement('div');cells.className='sl-actor-cells';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-cell-divider';cells.appendChild(d);}const acg=document.createElement('div');acg.className='sl-activity-cell-group';act.steps.forEach(step=>{const cell=document.createElement('div');cell.className='sl-step-cell';cell.dataset.actorId=actor.id;cell.dataset.activityNum=act.num;cell.dataset.stepId=step.id;document.querySelectorAll(`#default-view .task-group[data-actor="${actor.id}"][data-activity="${act.num}"][data-step="${step.id}"]`).forEach(t=>{const clone=t.cloneNode(true);clone.querySelectorAll('.task-header').forEach(h=>{h.onclick=function(e){handleTaskHeaderClick(e,this);};});cell.appendChild(clone);});acg.appendChild(cell);});cells.appendChild(acg);});row.appendChild(cells);cont.appendChild(row);});sv.appendChild(cont);injectQuoteBars(sv);initQuoteLinks(sv);}
+function rebuildFixedHeader(){const fhi=document.getElementById('fixedHeaderInner');if(!fhi)return;fhi.innerHTML='';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='fh-divider';fhi.appendChild(d);}const ag=document.createElement('div');ag.className='fh-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='fh-step-row';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step" style="font-size:12px;padding:7px 10px"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);fhi.appendChild(ag);});}
+let _ss=false;window.addEventListener('scroll',()=>{const fh=document.getElementById('fixedHeader'),dv=document.getElementById('default-view');if(!fh||!dv)return;fh.classList.toggle('visible',dv.getBoundingClientRect().top<0);if(!_ss){_ss=true;fh.scrollLeft=window.scrollX;_ss=false;}},true);
+function toggleEditMode(){document.body.classList.toggle('edit-mode');const e=document.body.classList.contains('edit-mode');document.getElementById('btn-edit').classList.toggle('active',e);if(e){document.querySelectorAll('.card-title,.card-type,.task-text,.card-pain,.card-opp,.card-pain-sug,.card-opp-sug,.nested-quote,.activity-label').forEach(el=>{if(!el.closest('.activity-num')&&!el.closest('.legend')&&!el.closest('.stats-bar'))el.contentEditable='true';});}else{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));}}
+function exportMap(){const b=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='journey-15-end-of-year-policy-reset.html';a.click();}
+function initQuoteLinks(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header');if(!header||header.querySelector('.task-quote-link'))return;const quotes=tg.querySelectorAll('.task-details .nested-quote');if(!quotes.length)return;const btn=document.createElement('button');btn.className='task-quote-link';btn.title=`${quotes.length} quote${quotes.length!==1?'s':''}`;btn.setAttribute('onclick','toggleQuotePopover(event,this)');btn.innerHTML=`<svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-2 2-2-2H3a1 1 0 0 1-1-1V3zm3 2a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H5z"/></svg><div class="quote-popover"><div class="quote-popover-title">Source Quotes</div></div>`;const toggle=header.querySelector('.toggle');if(toggle)header.insertBefore(btn,toggle);else header.appendChild(btn);header.onclick=function(e){handleTaskHeaderClick(e,this);};})}
+document.addEventListener('DOMContentLoaded',()=>{initFromJSON();buildLegend();injectQuoteBars(document.getElementById('default-view'));initQuoteLinks(document.getElementById('default-view'));updateStatsBar();rebuildFixedHeader();});
+</script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Map — Insurer Invoice / Reconciliation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root{--bg:#E8E6E1;--text:#1A1A1A;--text-muted:#5A5751;--card-task:#FFF9C4;--card-task-border:#E8DF8A;--card-pain:#FFCDD2;--card-pain-border:#EF9A9A;--card-step:#D1C4E9;--card-step-border:#B39DDB;--card-opp:#C8E6C9;--card-opp-border:#A5D6A7;--activity-bg:#1A1A1A;--grid-line:#D5D2CC;--shadow:#D4D1CC20;--col-w:280px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:auto}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;opacity:.4;pointer-events:none;z-index:0}
+  .page{position:relative;z-index:1;padding:32px 32px 60px;min-width:max-content}
+  .page-header{margin-bottom:20px;max-width:800px}
+  .page-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+  .page-header p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+  .meta-row{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .top-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .goal-chip{background:var(--activity-bg);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;line-height:1.4;white-space:nowrap}
+  .goal-chip span{color:#90CAF9;font-weight:700;margin-right:4px}
+  .legend{display:flex;gap:16px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-muted);flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:16px;height:11px;border-radius:3px;border:1px solid #ccc}
+  .stats-bar{display:flex;gap:18px;margin-bottom:14px;font-size:11px;font-weight:600;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:5px;color:var(--text-muted)}
+  .stat-item::before{font-size:9px}
+  .stat-item.pain::before{content:'⬤';color:#EF5350}
+  .stat-item.opp::before{content:'⬤';color:#66BB6A}
+  .stat-item.tasks::before{content:'⬤';color:#7E57C2}
+  .controls{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:#fff;border:1.5px solid var(--grid-line);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .controls button:hover{background:#f0efec;border-color:#bbb}
+  .controls button.active{background:var(--activity-bg);color:#fff;border-color:var(--activity-bg)}
+  .controls-sep{width:1px;height:20px;background:var(--grid-line);margin:0 4px}
+  .actor-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .map-row{display:flex;align-items:flex-start;gap:0}
+  .activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .activity-label{background:var(--activity-bg);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px var(--shadow);margin-bottom:8px}
+  .activity-num{background:rgba(255,255,255,.15);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .activity-cols{display:flex;gap:24px;align-items:flex-start}
+  .activity-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;border-radius:1px;margin:0 24px}
+  .step-col{width:var(--col-w);min-width:var(--col-w);display:flex;flex-direction:column;gap:16px}
+  .fixed-header-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);box-shadow:0 4px 16px rgba(0,0,0,.1);padding:8px 32px 10px;display:none;overflow:hidden}
+  .fixed-header-bar.visible{display:block}
+  .fh-inner{display:flex;align-items:flex-end;gap:0;min-width:max-content}
+  .fh-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .fh-step-row{display:flex;gap:24px}
+  .fh-step-card{width:var(--col-w);min-width:var(--col-w)}
+  .fh-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .card{border-radius:7px;padding:9px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow)}
+  .card-step{background:var(--card-step);border:1.5px solid var(--card-step-border)}
+  .card-step .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5E35B1;margin-bottom:3px}
+  .card-step .card-title{font-size:14px;font-weight:700;color:#311B92;line-height:1.3}
+  .task-group{display:flex;flex-direction:column}
+  .task-header{background:var(--card-task);border:1.5px solid var(--card-task-border);border-radius:7px;padding:8px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow);cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:7px;position:relative;z-index:2}
+  .task-header:hover{filter:brightness(.97)}
+  .task-group.open .task-header{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  .task-header .toggle{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8D7B00;margin-top:1px;transition:transform .2s;order:2;margin-left:auto}
+  .task-group.open .task-header .toggle{transform:rotate(90deg)}
+  .task-header .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8D7B00;margin-bottom:1px}
+  .task-header .task-text{flex:1;order:1}
+  .task-details{display:none;flex-direction:column;gap:8px;padding:8px;margin-top:-1px;background:#FDF8D8;border:1.5px solid var(--card-task-border);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;position:relative;z-index:1}
+  .task-group.open .task-details{display:flex;animation:expandPanel .15s ease-out forwards}
+  .task-group.open .task-details>*{opacity:0;animation:fadeInChild .12s ease-out forwards;animation-delay:.1s}
+  .task-group.open .task-details>*:nth-child(2){animation-delay:.13s}
+  .task-group.open .task-details>*:nth-child(3){animation-delay:.16s}
+  .task-group.open .task-details>*:nth-child(n+4){animation-delay:.19s}
+  @keyframes expandPanel{from{max-height:0;opacity:.5;padding-top:0;padding-bottom:0}to{max-height:2000px;opacity:1;padding-top:8px;padding-bottom:8px}}
+  @keyframes fadeInChild{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .card-pain{background:var(--card-pain);border:1.5px solid var(--card-pain-border)}
+  .card-pain .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp{background:var(--card-opp);border:1.5px solid var(--card-opp-border)}
+  .card-opp .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .card-pain-sug{background:#FFF3F2;border:1.5px dashed #EF9A9A}
+  .card-pain-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp-sug{background:#F2FAF2;border:1.5px dashed #A5D6A7}
+  .card-opp-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .nested-quote{margin-top:6px;padding:6px 9px;border-radius:5px;background:#F5F4F0;border:1px solid #E0DED8;font-style:italic;font-size:14px;line-height:1.4;color:var(--text)}
+  .nested-quote+.nested-quote{margin-top:4px}
+  .quote-source-badge{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;vertical-align:middle;font-style:normal}
+  .nested-quote[data-source="community"] .quote-source-badge{background:#F3E5F5;color:#6A1B9A}
+  .nested-quote[data-source="feedback"] .quote-source-badge{background:#FFF8E1;color:#F57F17}
+  .nested-quote[data-source="interview"] .quote-source-badge{background:#E3F2FD;color:#1565C0}
+  .quote-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;gap:0}
+  .quote-bar .qb-cell{height:100%;min-width:0}
+  .quote-bar .qb-cell.pain{background:#EF5350}
+  .quote-bar .qb-cell.opp{background:#66BB6A}
+  .quote-bar .qb-cell.pain-sug{background:transparent;border:1.5px solid #EF5350;box-sizing:border-box}
+  .quote-bar .qb-cell.opp-sug{background:transparent;border:1.5px solid #66BB6A;box-sizing:border-box}
+  .quote-bar .qb-cell:first-child{border-radius:3px 0 0 3px}
+  .quote-bar .qb-cell:last-child{border-radius:0 3px 3px 0}
+  .quote-bar .qb-cell:first-child:last-child{border-radius:3px}
+  .task-group.open .quote-bar{display:none}
+  .task-meta-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .task-meta-row .quote-bar{flex:1;margin-top:0}
+  .task-group.open .task-meta-row{display:none}
+  .task-quote-link{flex-shrink:0;order:3;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:#8D7B00;opacity:.7;position:relative;transition:opacity .15s,background .15s;margin-top:1px;background:transparent;border:none;padding:0;font-family:inherit}
+  .task-quote-link:hover{opacity:1;background:rgba(141,123,0,.12)}
+  .task-quote-link svg{width:13px;height:13px;fill:currentColor}
+  .quote-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;background:#fff;border:1.5px solid #E0DED8;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.13);padding:10px 12px;min-width:220px;max-width:320px;display:none;flex-direction:column;gap:6px;font-style:normal}
+  .task-quote-link.popover-open .quote-popover{display:flex}
+  .quote-popover-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#AAA69E;margin-bottom:2px}
+  .edit-notice{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--activity-bg);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;gap:12px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap}
+  body.edit-mode .edit-notice{display:flex}
+  .edit-notice button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  body.edit-mode [contenteditable="true"]{outline:1.5px dashed #7E57C2;outline-offset:2px;border-radius:3px;cursor:text}
+  body.edit-mode [contenteditable="true"]:focus{outline:2px solid #7E57C2;background:rgba(126,87,194,.06)}
+  body::-webkit-scrollbar{height:10px}
+  body::-webkit-scrollbar-track{background:#D5D2CC}
+  body::-webkit-scrollbar-thumb{background:#AAA69E;border-radius:5px}
+  #swimlane-view{display:none}
+  .swimlane-container{min-width:max-content;padding-top:8px;position:relative}
+  .sl-header-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px}
+  .sl-corner{width:150px;min-width:150px}
+  .sl-header-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .sl-step-headers{display:flex;gap:24px}
+  .sl-header-divider,.sl-cell-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-actor-row{display:flex;gap:0;align-items:flex-start;min-height:60px}
+  .sl-actor-row+.sl-actor-row{border-top:1px solid #D5D2CC;padding-top:8px}
+  .sl-actor-label{width:150px;min-width:150px;padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:flex-start;gap:6px;position:sticky;left:0;background:var(--bg);z-index:8;align-self:stretch}
+  .sl-actor-label .al-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .sl-actor-cells{display:flex;gap:0;align-items:flex-start}
+  .sl-activity-cell-group{display:flex;gap:24px;align-items:flex-start}
+  .sl-step-cell{min-width:var(--col-w);width:var(--col-w);padding:16px 0;display:flex;flex-direction:column;gap:16px}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;padding:6px 12px;background:#1A1A1A;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">&larr; Back to Journey Index</a>
+  <div class="page-header">
+    <h1>Insurer Invoice / Reconciliation</h1>
+    <p>The end-of-period billing view: a biller pulling together what was submitted to a specific insurer, what was paid, what was denied, what is still outstanding, and reconciling the numbers so the clinic understands its true receivables position with that payer. Covers report generation, aging analysis, discrepancy investigation, and the external workarounds billers rely on when Jane's reporting falls short. Signal from #support_usa_billing, #support_us_manualtherapy, and billing ride-along notes.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="goal-chip"><span>G1</span> Biller can see billed vs paid vs outstanding vs denied for any insurer in any period without leaving Jane or opening a spreadsheet</div>
+    <div class="goal-chip"><span>G2</span> Claims aging past 30/60/90 days without a response are automatically surfaced as an action queue</div>
+    <div class="goal-chip"><span>G3</span> Every dollar discrepancy (underpayment, contractual variance, unapplied ERA) is traceable to a specific claim</div>
+  </div>
+
+  <div id="legend" class="legend"></div>
+  <div id="stats-bar" class="stats-bar"></div>
+
+  <div class="controls">
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.add('open'))">Expand All</button>
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.remove('open'))">Collapse All</button>
+    <div class="controls-sep"></div>
+    <button id="btn-default" class="active" onclick="toggleView('default')">Column View</button>
+    <button id="btn-swimlane" onclick="toggleView('swimlane')">Swimlane View</button>
+    <div class="controls-sep"></div>
+    <button id="src-all" class="source-filter-btn active" onclick="filterBySource('all',this)">All Sources</button>
+    <button id="src-community" class="source-filter-btn" onclick="filterBySource('community',this)">Community</button>
+    <button id="src-feedback" class="source-filter-btn" onclick="filterBySource('feedback',this)">Feedback</button>
+    <div class="controls-sep"></div>
+    <button id="btn-edit" onclick="toggleEditMode()">Edit Map</button>
+    <button onclick="exportMap()">&#8595; Download</button>
+  </div>
+
+  <div class="fixed-header-bar" id="fixedHeader"><div class="fh-inner" id="fixedHeaderInner"></div></div>
+
+  <div id="default-view">
+  <div class="map-row">
+
+<!-- ACTIVITY 0: TRIGGER THE RECONCILIATION -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">0</div>Trigger the Reconciliation</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.1</div><div class="card-title">Biller decides to review what a specific insurer owes the clinic</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Decide to run an insurer-specific reconciliation — triggered by month-end close, a suspected underpayment, or a claim that's been outstanding too long</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no proactive alert or scheduled prompt in Jane telling a biller that a reconciliation is overdue or that claims are aging without response. The decision to reconcile is entirely reactive — billers only do it when something feels wrong or when month-end forces the issue. Many clinics never do it systematically at all.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"We know there's probably money sitting out there with insurers that we haven't chased, but we don't have a system to find it. We just deal with what comes back to us." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A recurring "AR health check" prompt — surfaced at the start of each month — showing each insurer's outstanding balance and oldest unresponded claim age would make proactive reconciliation the default behaviour rather than the exception.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Navigate to the billing report or insurer invoice section in Jane to pull the relevant data</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no dedicated "insurer reconciliation" workflow in Jane. Billers piece together the picture from multiple disconnected places: the Billing tab (for submitted/outstanding claims), ERA history (for what was paid), and the billing report export. No single view shows all of billed, paid, denied, and outstanding for one insurer in one period.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"To figure out what Aetna owes us I have to look at the billing tab, pull an export, and cross-reference it with our ERA folder. It takes an hour and I'm never confident I've got the full picture." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>An insurer-scoped AR summary view — filterable by payer and date range, showing billed / paid / adjusted / denied / outstanding as a single dashboard row per insurer — is the core missing capability that this journey requires. It is the prerequisite for everything else in this flow.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 1: GENERATE THE INSURER STATEMENT / REPORT -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">1</div>Generate the Report</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.1</div><div class="card-title">Biller runs a billing report filtered to the target insurer and date range</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Set report filters: insurer, date range (DOS or submission date), claim status, practitioner</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Jane's billing report filters are limited — billers can filter by practitioner and date range but cannot easily filter by insurer and claim status simultaneously in a single report view. Getting a clean "all claims for Insurer X in Q1 that are still outstanding" requires multiple filter passes and manual cross-referencing.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I want to see all submitted claims for Blue Cross that haven't had a response yet. I can't do that in one step in Jane — I have to filter, export, and then filter again in Excel." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Compound filtering on the billing tab — insurer AND status AND date range — without requiring an export step would make insurer-specific reconciliation queries answerable directly in Jane in under 30 seconds.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="system" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Generate the report — query all matching claims and return the results</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The billing report times out on large datasets. Clinics with high claim volumes or long date ranges regularly hit a timeout before the report finishes generating — forcing them to narrow the date range, run multiple partial reports, and stitch results together manually. This is a known and reported issue.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Every time I try to pull a full-year billing report it times out. I've had to break it into quarters and then combine the CSVs myself. It's tedious and I worry I'm double-counting something." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Async report generation — where Jane queues the report, sends the biller a notification when it's ready, and stores it for download — would eliminate timeouts entirely and allow large historical reports without the current workaround of splitting by date range.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.2</div><div class="card-title">Biller reviews the report output — what was billed, what was paid, what is still open</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Read through the report to understand the insurer's overall payment behaviour in the period</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Jane's billing report export is a flat claim-level list with no aggregation — no subtotals by insurer, no billed vs paid summary, no denial rate calculation. Every summary metric must be computed manually in Excel using SUMIF formulas or pivot tables. Billers who aren't spreadsheet-proficient simply can't do this analysis.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"I export the CSV and then spend an hour building pivot tables to get the numbers I need. My front desk staff can't do this at all — it requires someone who knows Excel well." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A summary row at the top of the billing report (or a separate "AR summary" view) showing total billed, total paid, total adjusted, total denied, and total outstanding — aggregated per insurer — would give billers the headline numbers without requiring any external analysis.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Identify claims where ERA payment does not match the expected contracted rate</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Distinguishing a contractual adjustment (the insurer paid the correct contracted rate, which is less than billed) from an underpayment (the insurer paid less than the contracted rate) requires knowing the contracted fee schedule — which lives outside Jane. Jane shows what was paid but not whether it was the correct amount per contract, making underpayments invisible without a separate fee schedule lookup.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I can see what they paid but I don't know if that's what they're supposed to pay. I have to look up our fee schedule separately for every code to check if they underpaid us." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Per-insurer contracted rate configuration in Jane — allowing billers to enter expected payment amounts per CPT code — would enable Jane to automatically flag underpayments (paid amount &lt; contracted rate) and surface them as a "contract variance" category in the reconciliation view.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 2: AGING ANALYSIS -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">2</div>Aging Analysis — Find What's Overdue</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.1</div><div class="card-title">Biller identifies claims submitted 30 / 60 / 90+ days ago with no ERA response</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Filter the billing report by submission date to find claims older than 30 days with no payment recorded</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no claim aging view in Jane. A claim submitted 90 days ago with no ERA response looks identical in the billing tab to one submitted yesterday — both show as "Submitted." The only way to identify aging claims is to export the billing report and calculate days since submission in Excel.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I have no idea how old my outstanding claims are unless I export them and do the math myself. Jane should show me a 30/60/90 day aging bucket — that's basic AR management." — Canny feature request, Billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>An AR aging view — claims bucketed by days outstanding (0–30, 31–60, 61–90, 90+) filterable by insurer — is the single most requested missing feature in the billing workflow. It is standard in every dedicated practice management system and would immediately surface the claims most at risk of timely filing expiry.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Distinguish between "no acknowledgement received" vs "acknowledged but payer hasn't responded" vs "denied and not yet resubmitted"</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>All three states — no 277 acknowledgement, acknowledged but no ERA yet, and denied but not resubmitted — appear as "Submitted" in Jane. They require completely different actions (investigate clearinghouse transmission, follow up with payer, correct and resubmit) but there is no way to distinguish them without opening each claim individually.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I have 40 claims sitting in Submitted and I don't know which ones are just waiting on the payer, which ones never made it through the clearinghouse, and which ones I need to resubmit. I have to click into each one." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Sub-status labels within "Submitted" — "Awaiting Acknowledgement," "Acknowledged — Pending Payment," "Denied — Action Required" — would let billers immediately filter to the right action queue without clicking into individual claims.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.2</div><div class="card-title">Biller follows up with the insurer on aging claims</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Check claim status by calling the insurer's provider line or logging into the insurer portal</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Checking claim status in Jane requires leaving the system entirely — calling the insurer's provider phone line (with hold times of 20–45 minutes) or logging into the insurer's web portal separately. There is no electronic claim status inquiry (276/277 transaction) integration in Jane — all follow-up is fully manual.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Following up on outstanding claims means being on hold with the insurer for 30 minutes per claim. I can only do a handful per day. There has to be a better way." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>276/277 Claim Status Inquiry integration — allowing billers to submit a claim status request from within Jane and receive the payer's current status electronically — would eliminate phone follow-up for the majority of status checks and let billers action dozens of aging claims in the time it currently takes to check one.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Log the outcome of the follow-up call — claim status, expected payment date, or required correction</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no notes field or follow-up log on a claim in Jane. When a biller calls an insurer and is told "the claim is in process, expect payment in 10 business days," there is nowhere to record that information in Jane. The biller relies on memory, a sticky note, or an external spreadsheet — leading to repeat calls and no audit trail.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I called about a claim last week and was told it's being processed. Now I can't remember which claim it was or what I was told. There's no place to write this stuff down in Jane." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A claim-level notes / activity log — where billers can record follow-up calls, payer responses, expected payment dates, and internal reminders — would create an audit trail and eliminate the reliance on external tracking for AR follow-up.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 3: RECONCILE PAYMENTS -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">3</div>Reconcile Payments Against Claims</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.1</div><div class="card-title">Biller matches ERA payments received to the claims that were submitted</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Verify that every submitted claim has a corresponding ERA response recorded in Jane</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>ERA auto-linking failures (where Jane attaches a remittance response to the wrong claim or leaves it unlinked) mean that some ERA payments are recorded in Jane but not credited to the correct claim. The reconciliation then shows that claim as unpaid even though the insurer did pay — the money is just attached to the wrong record.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I have a claim showing as outstanding but I'm pretty sure we were paid for it. I just can't find where the payment ended up. It probably got linked to the wrong invoice." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "find mislinked payments" tool — surfacing ERA responses that are linked to a claim for the wrong patient, wrong DOS, or wrong insurer — would make linking errors discoverable during reconciliation rather than requiring the biller to find them by accident.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Reconcile EFT deposit amounts against ERA totals — confirm the bank received what Jane recorded</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The EFT amount that lands in the clinic's bank account must be matched to the ERA that explains it — but Jane does not have bank feed integration. Billers must manually compare bank statements against Jane's remittance records, looking for the matching deposit amount. When a single EFT covers multiple ERAs, or an ERA is split across two EFTs, the matching becomes time-consuming.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"The EFT came in for $3,240 but I have two ERAs from that insurer that week. I had to add them up manually to figure out which combination matches the bank deposit." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>EFT reference number entry on ERA records in Jane — matching the trace number on the 835 to the bank deposit — would allow billers to confirm "this deposit = this ERA" and complete the cash reconciliation loop without a separate spreadsheet.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.2</div><div class="card-title">Biller categorises each outstanding balance: underpayment, denial, or in-flight</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>For each claim with an outstanding balance, determine whether it is: an underpayment to appeal, a denial to correct and resubmit, or a legitimate in-flight claim still awaiting first response</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>All three categories — underpayment, denial, in-flight — are indistinguishable at a glance in Jane's billing tab. Each requires a completely different action, but the biller must open every claim individually to determine which bucket it belongs to. For a clinic with hundreds of outstanding claims, categorising the full AR is a half-day task done entirely by hand.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"Reconciling our AR takes me most of a Friday every month. I'm basically auditing every open claim one at a time to figure out what action to take. It shouldn't be this manual." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>AI-assisted AR triage — classifying each outstanding claim based on its ERA response history, denial codes, and age — could pre-categorise the AR queue into "appeal," "correct and resubmit," and "awaiting response" buckets, reducing a half-day manual task to a 15-minute review.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 4: PRODUCE FINAL REPORT -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">4</div>Produce Final Statement for Management</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.1</div><div class="card-title">Biller produces an end-of-period insurer summary for clinic ownership or management</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Build the insurer-level summary: total billed, total collected, collection rate, top denial reasons, outstanding AR balance</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Every end-of-period insurer summary is built outside Jane — typically a custom Excel workbook that the biller maintains separately. Jane's export data does not include all required fields (e.g. ERA payment date, ERA response code, resubmission history), so billers supplement with manual entries. When the biller leaves, the spreadsheet methodology leaves with them.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"My monthly insurer report is a spreadsheet I built myself two years ago. It's held together with duct tape. If I left, the next person would have no idea how it works." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>A built-in insurer performance report in Jane — showing collection rate, average days to payment, denial rate by code, and outstanding AR balance per insurer — would give clinic owners and billers a consistent, repeatable view without relying on biller-built spreadsheets. This feeds directly into Journey #13 (Insurer Reporting & Analytics).</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Share the summary with the clinic owner and flag any insurers where the collection rate or payment speed has deteriorated</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Clinic owners who are not billers have no way to access insurer performance data directly in Jane — they are entirely dependent on their biller to produce and interpret it. If the biller is busy, sick, or leaves, the owner has no visibility into the clinic's AR health with any given insurer.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"The clinic owner asks me how we're doing with our insurers and I have to pull it together for them. They can't see any of this themselves in Jane." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A read-only "AR overview" dashboard accessible to clinic owners (without full biller permissions) — showing each insurer's current outstanding balance, recent collection rate, and any aging claims — would give owners independent visibility into their revenue cycle health.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.2</div><div class="card-title">Biller generates a formal insurer invoice if required by the payer</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Some insurers (particularly Canadian provincial plans or self-insured employers) require a formal invoice listing all claims in the period — generate and submit this</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Jane has no formal "insurer invoice" generation feature — a structured document listing all claims billed to a specific insurer in a period, formatted for submission to the payer. Clinics that work with insurers requiring this (e.g. WCB, ICBC, MVA, employer group plans) generate these invoices manually in Word or a separate tool and paste in data from Jane's export.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"WCB requires us to send them a monthly invoice with all our claims listed. I export from Jane, copy the data into a Word template, and format it manually every month. Takes about 2 hours." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A configurable insurer invoice template — where the clinic defines the required fields, layout, and submission format per insurer — would automate the monthly invoice generation for payers that require formal billing statements.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div><!-- end map-row -->
+  </div><!-- end default-view -->
+  <div id="swimlane-view"></div>
+</div>
+
+<div class="edit-notice" id="editNotice">✏ Edit Mode — click any text to edit<button onclick="toggleEditMode()">Exit Edit Mode</button></div>
+
+<script type="application/json" id="journey-data">
+{
+  "title": "Insurer Invoice / Reconciliation",
+  "subtitle": "End-of-period: generating an insurer report, analysing what was billed vs paid vs outstanding, aging claims without a response, reconciling ERA payments to bank deposits, and producing a management summary.",
+  "version": "1.0",
+  "lastUpdated": "2026-03-10",
+  "goals": [
+    {"id": "G1", "text": "Biller can see billed vs paid vs outstanding vs denied for any insurer in any period without leaving Jane or opening a spreadsheet"},
+    {"id": "G2", "text": "Claims aging past 30/60/90 days without a response are automatically surfaced as an action queue"},
+    {"id": "G3", "text": "Every dollar discrepancy (underpayment, contractual variance, unapplied ERA) is traceable to a specific claim"}
+  ],
+  "actors": [
+    {"id": "biller", "label": "Biller", "emoji": "🧾", "bg": "#F8BBD0", "color": "#880E4F"},
+    {"id": "system", "label": "Jane System", "emoji": "🖥", "bg": "#BBDEFB", "color": "#0D47A1"}
+  ],
+  "activities": [
+    {"num": "0", "name": "Trigger the Reconciliation", "steps": [
+      {"id": "0.1", "title": "Biller decides to review what a specific insurer owes"}
+    ]},
+    {"num": "1", "name": "Generate the Report", "steps": [
+      {"id": "1.1", "title": "Biller runs billing report filtered to target insurer and date range"},
+      {"id": "1.2", "title": "Biller reviews billed vs paid vs outstanding output"}
+    ]},
+    {"num": "2", "name": "Aging Analysis — Find What's Overdue", "steps": [
+      {"id": "2.1", "title": "Biller identifies claims 30/60/90+ days old with no ERA response"},
+      {"id": "2.2", "title": "Biller follows up with insurer on aging claims"}
+    ]},
+    {"num": "3", "name": "Reconcile Payments Against Claims", "steps": [
+      {"id": "3.1", "title": "Biller matches ERA payments to submitted claims and EFT deposits"},
+      {"id": "3.2", "title": "Biller categorises each outstanding balance: underpayment, denial, or in-flight"}
+    ]},
+    {"num": "4", "name": "Produce Final Statement for Management", "steps": [
+      {"id": "4.1", "title": "Biller builds end-of-period insurer summary for clinic ownership"},
+      {"id": "4.2", "title": "Biller generates formal insurer invoice if required by payer"}
+    ]}
+  ]
+}
+</script>
+
+<script>
+let actors=[],activitiesWithSteps=[];
+function initFromJSON(){const j=document.getElementById('journey-data');if(!j)return;try{const d=JSON.parse(j.textContent);actors=(d.actors||[]).map(a=>({id:a.id,label:(a.emoji?a.emoji+' ':'')+a.label,color:a.bg}));activitiesWithSteps=(d.activities||[]).map(a=>({num:a.num,name:a.name,steps:(a.steps||[]).map(s=>({id:s.id,title:s.title}))}));if(d.lastUpdated&&d.lastUpdated!=='YYYY-MM-DD'){const h=document.querySelector('.page-header');if(h&&!document.getElementById('meta-row')){const m=document.createElement('p');m.id='meta-row';m.className='meta-row';m.textContent='Last updated: '+d.lastUpdated;h.appendChild(m);}}}catch(e){}}
+function buildLegend(){const l=document.getElementById('legend');if(!l)return;let h=`<div class="legend-item"><div class="legend-swatch" style="background:var(--card-step)"></div> Step</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-task)"></div> Task</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-pain)"></div> Pain Point</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-opp)"></div> Opportunity</div><div class="legend-item"><div class="legend-swatch" style="background:#FFF3F2;border:1.5px dashed #EF9A9A"></div> Suggested Pain</div><div class="legend-item"><div class="legend-swatch" style="background:#F2FAF2;border:1.5px dashed #A5D6A7"></div> Suggested Opp</div>`;if(actors.length){h+='<div class="legend-item" style="margin-left:8px;width:1px;height:11px;background:#ccc"></div>';actors.forEach(a=>{h+=`<div class="legend-item"><div class="legend-swatch" style="background:${a.color}"></div> ${a.label}</div>`;});}l.innerHTML=h;}
+function updateStatsBar(){const b=document.getElementById('stats-bar');if(!b)return;const t=document.querySelectorAll('#default-view .task-group').length;let p=0,o=0,s=0;document.querySelectorAll('#default-view .card-pain').forEach(c=>{if(c.closest('.task-details'))p++;});document.querySelectorAll('#default-view .card-opp').forEach(c=>{if(c.closest('.task-details'))o++;});document.querySelectorAll('#default-view .card-pain-sug,#default-view .card-opp-sug').forEach(c=>{if(c.closest('.task-details'))s++;});b.innerHTML=`<div class="stat-item tasks">${t} tasks</div><div class="stat-item pain">${p} pain points</div><div class="stat-item opp">${o} opportunities</div><div class="stat-item" style="color:var(--text-muted)">${s} suggestions</div>`;}
+function handleTaskHeaderClick(e,el){if(e.target.closest('.task-quote-link'))return;el.closest('.task-group').classList.toggle('open');}
+function toggleQuotePopover(e,btn){e.stopPropagation();const open=btn.classList.contains('popover-open');document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));if(!open)btn.classList.add('popover-open');}
+document.addEventListener('click',()=>{document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));});
+function injectQuoteBars(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header'),details=tg.querySelector('.task-details');if(!header||!details)return;const p=details.querySelectorAll('.card-pain .nested-quote').length,o=details.querySelectorAll('.card-opp .nested-quote').length,ps=details.querySelectorAll('.card-pain-sug').length,os=details.querySelectorAll('.card-opp-sug').length;if(p+o+ps+os===0)return;let mr=header.querySelector('.task-meta-row');if(!mr){mr=document.createElement('div');mr.className='task-meta-row';header.querySelector('.task-text').appendChild(mr);}let bar=mr.querySelector('.quote-bar');if(!bar){bar=document.createElement('div');bar.className='quote-bar';mr.appendChild(bar);}bar.innerHTML='';const add=(cls,n)=>{if(n<=0)return;const c=document.createElement('div');c.className='qb-cell '+cls;c.style.flex=n;bar.appendChild(c);};add('pain',p);add('opp',o);add('pain-sug',ps);add('opp-sug',os);});}
+function filterBySource(s,btn){document.querySelectorAll('.source-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.nested-quote').forEach(q=>{q.style.display=(s==='all'||q.dataset.source===s)?'':'none';});injectQuoteBars(document.getElementById('default-view'));}
+function toggleView(v){const dv=document.getElementById('default-view'),sv=document.getElementById('swimlane-view'),bd=document.getElementById('btn-default'),bs=document.getElementById('btn-swimlane');if(v==='default'){dv.style.display='';sv.style.display='none';bd.classList.add('active');bs.classList.remove('active');rebuildFixedHeader();}else{dv.style.display='none';sv.style.display='';bd.classList.remove('active');bs.classList.add('active');buildSwimlane();}}
+function buildSwimlane(){const sv=document.getElementById('swimlane-view');sv.innerHTML='';const cont=document.createElement('div');cont.className='swimlane-container';const hr=document.createElement('div');hr.className='sl-header-row';const corner=document.createElement('div');corner.className='sl-corner';hr.appendChild(corner);activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-header-divider';hr.appendChild(d);}const ag=document.createElement('div');ag.className='sl-header-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='sl-step-headers';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);hr.appendChild(ag);});cont.appendChild(hr);actors.forEach(actor=>{const row=document.createElement('div');row.className='sl-actor-row';const lbl=document.createElement('div');lbl.className='sl-actor-label';lbl.innerHTML=`<div class="al-dot" style="background:${actor.color}"></div><span>${actor.label}</span>`;row.appendChild(lbl);const cells=document.createElement('div');cells.className='sl-actor-cells';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-cell-divider';cells.appendChild(d);}const acg=document.createElement('div');acg.className='sl-activity-cell-group';act.steps.forEach(step=>{const cell=document.createElement('div');cell.className='sl-step-cell';cell.dataset.actorId=actor.id;cell.dataset.activityNum=act.num;cell.dataset.stepId=step.id;document.querySelectorAll(`#default-view .task-group[data-actor="${actor.id}"][data-activity="${act.num}"][data-step="${step.id}"]`).forEach(t=>{const clone=t.cloneNode(true);clone.querySelectorAll('.task-header').forEach(h=>{h.onclick=function(e){handleTaskHeaderClick(e,this);};});cell.appendChild(clone);});acg.appendChild(cell);});cells.appendChild(acg);});row.appendChild(cells);cont.appendChild(row);});sv.appendChild(cont);injectQuoteBars(sv);initQuoteLinks(sv);}
+function rebuildFixedHeader(){const fhi=document.getElementById('fixedHeaderInner');if(!fhi)return;fhi.innerHTML='';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='fh-divider';fhi.appendChild(d);}const ag=document.createElement('div');ag.className='fh-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='fh-step-row';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step" style="font-size:12px;padding:7px 10px"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);fhi.appendChild(ag);});}
+let _ss=false;window.addEventListener('scroll',()=>{const fh=document.getElementById('fixedHeader'),dv=document.getElementById('default-view');if(!fh||!dv)return;fh.classList.toggle('visible',dv.getBoundingClientRect().top<0);if(!_ss){_ss=true;fh.scrollLeft=window.scrollX;_ss=false;}},true);
+function toggleEditMode(){document.body.classList.toggle('edit-mode');const e=document.body.classList.contains('edit-mode');document.getElementById('btn-edit').classList.toggle('active',e);if(e){document.querySelectorAll('.card-title,.card-type,.task-text,.card-pain,.card-opp,.card-pain-sug,.card-opp-sug,.nested-quote,.activity-label').forEach(el=>{if(!el.closest('.activity-num')&&!el.closest('.legend')&&!el.closest('.stats-bar'))el.contentEditable='true';});}else{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));}}
+function exportMap(){const b=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='journey-12-insurer-invoice-reconciliation.html';a.click();}
+function initQuoteLinks(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header');if(!header||header.querySelector('.task-quote-link'))return;const quotes=tg.querySelectorAll('.task-details .nested-quote');if(!quotes.length)return;const btn=document.createElement('button');btn.className='task-quote-link';btn.title=`${quotes.length} quote${quotes.length!==1?'s':''}`;btn.setAttribute('onclick','toggleQuotePopover(event,this)');btn.innerHTML=`<svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-2 2-2-2H3a1 1 0 0 1-1-1V3zm3 2a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H5z"/></svg><div class="quote-popover"><div class="quote-popover-title">Source Quotes</div></div>`;const toggle=header.querySelector('.toggle');if(toggle)header.insertBefore(btn,toggle);else header.appendChild(btn);header.onclick=function(e){handleTaskHeaderClick(e,this);};})}
+document.addEventListener('DOMContentLoaded',()=>{initFromJSON();buildLegend();injectQuoteBars(document.getElementById('default-view'));initQuoteLinks(document.getElementById('default-view'));updateStatsBar();rebuildFixedHeader();});
+</script>
+</body>
+</html>

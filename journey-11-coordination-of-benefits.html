@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Map — Coordination of Benefits (COB)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root{--bg:#E8E6E1;--text:#1A1A1A;--text-muted:#5A5751;--card-task:#FFF9C4;--card-task-border:#E8DF8A;--card-pain:#FFCDD2;--card-pain-border:#EF9A9A;--card-step:#D1C4E9;--card-step-border:#B39DDB;--card-opp:#C8E6C9;--card-opp-border:#A5D6A7;--activity-bg:#1A1A1A;--grid-line:#D5D2CC;--shadow:#D4D1CC20;--col-w:280px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:auto}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;opacity:.4;pointer-events:none;z-index:0}
+  .page{position:relative;z-index:1;padding:32px 32px 60px;min-width:max-content}
+  .page-header{margin-bottom:20px;max-width:800px}
+  .page-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+  .page-header p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+  .meta-row{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .top-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .goal-chip{background:var(--activity-bg);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;line-height:1.4;white-space:nowrap}
+  .goal-chip span{color:#90CAF9;font-weight:700;margin-right:4px}
+  .legend{display:flex;gap:16px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-muted);flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:16px;height:11px;border-radius:3px;border:1px solid #ccc}
+  .stats-bar{display:flex;gap:18px;margin-bottom:14px;font-size:11px;font-weight:600;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:5px;color:var(--text-muted)}
+  .stat-item::before{font-size:9px}
+  .stat-item.pain::before{content:'⬤';color:#EF5350}
+  .stat-item.opp::before{content:'⬤';color:#66BB6A}
+  .stat-item.tasks::before{content:'⬤';color:#7E57C2}
+  .controls{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:#fff;border:1.5px solid var(--grid-line);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .controls button:hover{background:#f0efec;border-color:#bbb}
+  .controls button.active{background:var(--activity-bg);color:#fff;border-color:var(--activity-bg)}
+  .controls-sep{width:1px;height:20px;background:var(--grid-line);margin:0 4px}
+  .actor-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .map-row{display:flex;align-items:flex-start;gap:0}
+  .activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .activity-label{background:var(--activity-bg);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px var(--shadow);margin-bottom:8px}
+  .activity-num{background:rgba(255,255,255,.15);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .activity-cols{display:flex;gap:24px;align-items:flex-start}
+  .activity-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;border-radius:1px;margin:0 24px}
+  .step-col{width:var(--col-w);min-width:var(--col-w);display:flex;flex-direction:column;gap:16px}
+  .fixed-header-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);box-shadow:0 4px 16px rgba(0,0,0,.1);padding:8px 32px 10px;display:none;overflow:hidden}
+  .fixed-header-bar.visible{display:block}
+  .fh-inner{display:flex;align-items:flex-end;gap:0;min-width:max-content}
+  .fh-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .fh-step-row{display:flex;gap:24px}
+  .fh-step-card{width:var(--col-w);min-width:var(--col-w)}
+  .fh-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .card{border-radius:7px;padding:9px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow)}
+  .card-step{background:var(--card-step);border:1.5px solid var(--card-step-border)}
+  .card-step .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5E35B1;margin-bottom:3px}
+  .card-step .card-title{font-size:14px;font-weight:700;color:#311B92;line-height:1.3}
+  .task-group{display:flex;flex-direction:column}
+  .task-header{background:var(--card-task);border:1.5px solid var(--card-task-border);border-radius:7px;padding:8px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow);cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:7px;position:relative;z-index:2}
+  .task-header:hover{filter:brightness(.97)}
+  .task-group.open .task-header{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  .task-header .toggle{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8D7B00;margin-top:1px;transition:transform .2s;order:2;margin-left:auto}
+  .task-group.open .task-header .toggle{transform:rotate(90deg)}
+  .task-header .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8D7B00;margin-bottom:1px}
+  .task-header .task-text{flex:1;order:1}
+  .task-details{display:none;flex-direction:column;gap:8px;padding:8px;margin-top:-1px;background:#FDF8D8;border:1.5px solid var(--card-task-border);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;position:relative;z-index:1}
+  .task-group.open .task-details{display:flex;animation:expandPanel .15s ease-out forwards}
+  .task-group.open .task-details>*{opacity:0;animation:fadeInChild .12s ease-out forwards;animation-delay:.1s}
+  .task-group.open .task-details>*:nth-child(2){animation-delay:.13s}
+  .task-group.open .task-details>*:nth-child(3){animation-delay:.16s}
+  .task-group.open .task-details>*:nth-child(n+4){animation-delay:.19s}
+  @keyframes expandPanel{from{max-height:0;opacity:.5;padding-top:0;padding-bottom:0}to{max-height:2000px;opacity:1;padding-top:8px;padding-bottom:8px}}
+  @keyframes fadeInChild{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .card-pain{background:var(--card-pain);border:1.5px solid var(--card-pain-border)}
+  .card-pain .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp{background:var(--card-opp);border:1.5px solid var(--card-opp-border)}
+  .card-opp .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .card-pain-sug{background:#FFF3F2;border:1.5px dashed #EF9A9A}
+  .card-pain-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp-sug{background:#F2FAF2;border:1.5px dashed #A5D6A7}
+  .card-opp-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .nested-quote{margin-top:6px;padding:6px 9px;border-radius:5px;background:#F5F4F0;border:1px solid #E0DED8;font-style:italic;font-size:14px;line-height:1.4;color:var(--text)}
+  .nested-quote+.nested-quote{margin-top:4px}
+  .quote-source-badge{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;vertical-align:middle;font-style:normal}
+  .nested-quote[data-source="community"] .quote-source-badge{background:#F3E5F5;color:#6A1B9A}
+  .nested-quote[data-source="feedback"] .quote-source-badge{background:#FFF8E1;color:#F57F17}
+  .nested-quote[data-source="interview"] .quote-source-badge{background:#E3F2FD;color:#1565C0}
+  .quote-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;gap:0}
+  .quote-bar .qb-cell{height:100%;min-width:0}
+  .quote-bar .qb-cell.pain{background:#EF5350}
+  .quote-bar .qb-cell.opp{background:#66BB6A}
+  .quote-bar .qb-cell.pain-sug{background:transparent;border:1.5px solid #EF5350;box-sizing:border-box}
+  .quote-bar .qb-cell.opp-sug{background:transparent;border:1.5px solid #66BB6A;box-sizing:border-box}
+  .quote-bar .qb-cell:first-child{border-radius:3px 0 0 3px}
+  .quote-bar .qb-cell:last-child{border-radius:0 3px 3px 0}
+  .quote-bar .qb-cell:first-child:last-child{border-radius:3px}
+  .task-group.open .quote-bar{display:none}
+  .task-meta-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .task-meta-row .quote-bar{flex:1;margin-top:0}
+  .task-group.open .task-meta-row{display:none}
+  .task-quote-link{flex-shrink:0;order:3;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:#8D7B00;opacity:.7;position:relative;transition:opacity .15s,background .15s;margin-top:1px;background:transparent;border:none;padding:0;font-family:inherit}
+  .task-quote-link:hover{opacity:1;background:rgba(141,123,0,.12)}
+  .task-quote-link svg{width:13px;height:13px;fill:currentColor}
+  .quote-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;background:#fff;border:1.5px solid #E0DED8;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.13);padding:10px 12px;min-width:220px;max-width:320px;display:none;flex-direction:column;gap:6px;font-style:normal}
+  .task-quote-link.popover-open .quote-popover{display:flex}
+  .quote-popover-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#AAA69E;margin-bottom:2px}
+  .edit-notice{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--activity-bg);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;gap:12px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap}
+  body.edit-mode .edit-notice{display:flex}
+  .edit-notice button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  body.edit-mode [contenteditable="true"]{outline:1.5px dashed #7E57C2;outline-offset:2px;border-radius:3px;cursor:text}
+  body.edit-mode [contenteditable="true"]:focus{outline:2px solid #7E57C2;background:rgba(126,87,194,.06)}
+  body::-webkit-scrollbar{height:10px}
+  body::-webkit-scrollbar-track{background:#D5D2CC}
+  body::-webkit-scrollbar-thumb{background:#AAA69E;border-radius:5px}
+  #swimlane-view{display:none}
+  .swimlane-container{min-width:max-content;padding-top:8px;position:relative}
+  .sl-header-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px}
+  .sl-corner{width:150px;min-width:150px}
+  .sl-header-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .sl-step-headers{display:flex;gap:24px}
+  .sl-header-divider,.sl-cell-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-actor-row{display:flex;gap:0;align-items:flex-start;min-height:60px}
+  .sl-actor-row+.sl-actor-row{border-top:1px solid #D5D2CC;padding-top:8px}
+  .sl-actor-label{width:150px;min-width:150px;padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:flex-start;gap:6px;position:sticky;left:0;background:var(--bg);z-index:8;align-self:stretch}
+  .sl-actor-label .al-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .sl-actor-cells{display:flex;gap:0;align-items:flex-start}
+  .sl-activity-cell-group{display:flex;gap:24px;align-items:flex-start}
+  .sl-step-cell{min-width:var(--col-w);width:var(--col-w);padding:16px 0;display:flex;flex-direction:column;gap:16px}
+  .sl-arrow-overlay{position:absolute;top:0;left:0;pointer-events:none;z-index:3}
+  .sl-arrow-overlay path{fill:none;stroke:#7E57C2;stroke-width:2}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;padding:6px 12px;background:#1A1A1A;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">&larr; Back to Journey Index</a>
+  <div class="page-header">
+    <h1>Coordination of Benefits (COB)</h1>
+    <p>How a clinic bills a patient with two or more insurance plans — setting up the correct policy priority order, submitting the primary claim, receiving the primary ERA, passing the remaining balance to secondary, and handling the secondary claim lifecycle. Covers US (electronic secondary claims) and Canadian (significant integration gaps) separately. Signal from #support_usa_billing, #support_ca_insurance, #pt-insurance, #hot_seat_support, and #jane_community_posts_fb.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="goal-chip"><span>G1</span> Staff correctly identify which policy is primary and which is secondary before the first claim is submitted</div>
+    <div class="goal-chip"><span>G2</span> The secondary claim auto-populates with the primary EOB data so billers don't have to manually transcribe what the primary paid</div>
+    <div class="goal-chip"><span>G3</span> The remaining patient balance is correctly calculated and communicated after both payers respond</div>
+  </div>
+
+  <div id="legend" class="legend"></div>
+  <div id="stats-bar" class="stats-bar"></div>
+
+  <div class="controls">
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.add('open'))">Expand All</button>
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.remove('open'))">Collapse All</button>
+    <div class="controls-sep"></div>
+    <button id="btn-default" class="active" onclick="toggleView('default')">Column View</button>
+    <button id="btn-swimlane" onclick="toggleView('swimlane')">Swimlane View</button>
+    <div class="controls-sep"></div>
+    <button id="src-all" class="source-filter-btn active" onclick="filterBySource('all',this)">All Sources</button>
+    <button id="src-community" class="source-filter-btn" onclick="filterBySource('community',this)">Community</button>
+    <button id="src-feedback" class="source-filter-btn" onclick="filterBySource('feedback',this)">Feedback</button>
+    <div class="controls-sep"></div>
+    <button id="btn-edit" onclick="toggleEditMode()">Edit Map</button>
+    <button onclick="exportMap()">&#8595; Download</button>
+  </div>
+
+  <div class="fixed-header-bar" id="fixedHeader"><div class="fh-inner" id="fixedHeaderInner"></div></div>
+
+  <div id="default-view">
+  <div class="map-row">
+
+<!-- ACTIVITY 0: SETUP DUAL POLICIES -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">0</div>Set Up Dual Policies on the Patient Profile</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.1</div><div class="card-title">Identify which policy is primary and which is secondary</div></div>
+
+      <div class="task-group" data-actor="admin" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Determine correct policy priority order (Birthday Rule, Medicare last-payer rules, employer plan order)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Priority order rules are complex — Medicare primary rules, Medicaid last-payer rules, auto-accident liability order, and employer plan rules all apply differently by patient situation. There is no COB priority guidance in Jane; billers must know these rules from external sources<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"COB logic — ensure correct insurance order (Medicare primary rules, Medicaid last payer, auto accident liability, etc.) — appears to be absolutely missing." — Community feedback, #jane_community_posts_fb</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A COB priority guide surfaced when a second policy is added to a patient profile — with rules of thumb for common scenarios (Medicare, employer plans, Birthday Rule) — would reduce wrong-order submissions and the downstream claim denials they cause.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="admin" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Add both policies to the patient profile and set the correct priority order</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Both primary and secondary policies must also be attached at the appointment level — adding policies to the profile is not sufficient. Staff who don't know this skip the appointment-level attachment, causing the secondary claim to never be generated<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"The secondary insurance policy needs to be added to the appointment. This can be done by manually adding the secondary policy after the primary, or by using the 'Copy previous' option when booking." — Rachel, #support_billing</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>When a patient has both primary and secondary policies on file, auto-attach both to new appointments by default — or at minimum show a visible "secondary policy not attached" indicator in the appointment panel before billing starts.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 1: SUBMIT PRIMARY CLAIM -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">1</div>Submit Primary Claim &amp; Wait for ERA</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.1</div><div class="card-title">Submit primary claim electronically — secondary claim marked "Waiting on Primary"</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Submit primary claim — Jane auto-creates a secondary claim marked "Waiting on Primary"</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Jane generates the secondary claim automatically when the primary is submitted and both policies are on the appointment — this is a genuine strength. The secondary claim holds "Waiting on Primary" status until the primary ERA is received and processed.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Wait for the primary ERA before touching the secondary claim</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Secondary claim auto-population is inconsistent — if the primary claim is still in Draft when a biller looks at the secondary, the secondary opens blank and requires manual entry. Many billers don't know they need to wait for the primary ERA before working the secondary<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"When a primary claim hasn't been submitted yet, Jane doesn't have confirmed primary-claim data to reliably auto-populate a secondary claim. In some cases it may look like pieces are filling in, but that behavior isn't guaranteed." — Rachel, #support_billing</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Surface a clear "waiting for primary ERA" status on the secondary claim with an estimated timeframe — and lock editing until the primary ERA is received — to prevent billers from manually filling the secondary before the data is available.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.2</div><div class="card-title">Medicare / auto-forwarding payers: enable "submits to secondary payers" in insurer settings</div></div>
+
+      <div class="task-group" data-actor="admin" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Toggle "Insurer submits claims to secondary payers" on the primary insurer settings (e.g. Medicare)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>When Medicare automatically forwards a claim to the patient's secondary insurer, Jane must be configured to detect this — via the "submits to secondary payers" toggle — or billers accidentally re-submit the secondary themselves, creating a duplicate claim<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"If Medicare or other carriers automatically forward to secondary, EMR must detect this to avoid duplicate claims... They just want to make sure the 'Insurer submits claims to secondary payers' is checked ON. Jane will auto-mark the secondary claim as submitted." — Community and Alexa, #support_usa_billing</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Auto-detect forwarding behaviour from the ERA itself when a secondary response arrives — if Jane sees a secondary ERA linked to a primary submission that hasn't been explicitly submitted as secondary by the biller, flag it as likely auto-forwarded rather than requiring the insurer-level toggle to be pre-configured.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 2: RECEIVE PRIMARY ERA, PASS BALANCE TO SECONDARY -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">2</div>Receive Primary ERA &amp; Pass Balance to Secondary</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.1</div><div class="card-title">Process primary ERA — set remaining balance to "Collect from Next Payer"</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Edit primary EOB — change "Adjust by" dropdown to "Collect $ From Next Payer" for the remaining balance</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The "Collect $ from Next Payer" option in the primary EOB is easy to miss — billers who select "Adjust By" instead write off the remaining balance rather than passing it to the secondary, so the secondary claim never receives a balance to collect against<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"They'll want to add the secondary insurer, edit those primary EOBs to pass the balance to the Next Payer, then they'll be able to apply the secondary payment." — Karen, #support_usa_billing</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>When a secondary policy exists on an appointment and the biller is editing the primary EOB, surface a prompt: "This patient has a secondary policy — set the remaining $X to Collect from Next Payer?" to make the most common correct action the default rather than requiring the biller to know the correct dropdown choice.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="system" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Auto-populate secondary claim with primary payer data — amounts billed, primary payment, remaining balance, COB details</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>When the primary ERA is received and the "Collect from Next Payer" balance is set, Jane pre-fills the secondary claim 837 with the primary payer's adjudication details — this is a genuine strength and reduces manual entry for straightforward US COB scenarios.</div>
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The secondary claim EOB's "Paid Amount" column can show the primary's full allowed amount rather than the true secondary net payment when COB deductibles are involved — requiring the biller to manually calculate what the secondary actually paid<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Jane then automatically copied over the Deductible Field and Max Amount Field and created the PBC invoice owing as $2.15, when PBC actually paid $27.15. This resulted in a credit in PBC." — Christine K, #pt-insurance</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 3: SUBMIT & PROCESS SECONDARY CLAIM (US) -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">3</div>Submit &amp; Process Secondary Claim (US)</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.1</div><div class="card-title">Submit secondary claim electronically with primary payer info included</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Review pre-filled secondary claim and submit from the Unsubmitted folder</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Secondary COB denials frequently cite "CO-22: this care may be covered by another payer" or "MA04: secondary payment cannot be considered without identity or payment information from the primary payer" — usually caused by incomplete or incorrectly formatted primary adjudication data in the secondary 837<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"CO 22, $250.00: This care may be covered by another payer per coordination of benefits. N36: Claim must meet primary payer's processing requirements before we can consider payment." — Real denial on a secondary claim, #support_usa_billing</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Pre-flight validation on secondary claims — checking that the primary payer info, claim control number, and adjudication amounts are correctly populated before the 837 is transmitted — would catch the most common secondary COB denial causes before submission.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Receive secondary ERA — record payment and confirm final patient balance</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>After both insurers respond, calculating the true patient responsibility (what remains after both payers' adjustments, deductibles, and coinsurance) is a manual calculation that Jane does not surface automatically — billers must compare primary and secondary EOBs to arrive at the correct patient balance<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Accurate remaining balance calculation — after each payer response and/or manually input — appears to be missing." — Community feedback, #jane_community_posts_fb</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A patient responsibility summary panel — showing primary paid, secondary paid, total adjustments, and the final patient balance, updated in real time as each ERA is processed — would replace the manual calculation that billers currently do across multiple EOB views.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 4: CANADIAN COB — SIGNIFICANT GAPS -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">4</div>Canadian COB — Significant Integration Gaps</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.1</div><div class="card-title">CA — Identify which primary/secondary combinations Jane can process electronically</div></div>
+
+      <div class="task-group" data-actor="admin" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Check the CA COB compatibility matrix — most secondary combinations are NOT electronically submittable via Jane</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>For Canadian clinics, TELUS eClaims does not support secondary claims or coordination of benefits at all — Jane can only submit primary claims through TELUS. Any secondary coverage must be handled directly by the insurer or by the patient submitting their own receipt<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Jane can only submit primary claims through TELUS eClaims. The adjudication details required for secondary processing can't be sent electronically via TELUS, which is why the submission fails." — Isa, #support_ca_insurance</div></div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>The PBC PROVIDERnet integration is the notable exception — PBC auto-coordinates benefits when the claim is submitted via PROVIDERnet and the patient has a secondary policy. Jane auto-adds the secondary policy and handles the COB payment. Expanding this auto-coordination to more Canadian integrations is the clearest long-term opportunity.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.2</div><div class="card-title">CA — PBC as primary: auto-coordination happens; PBC COB credit issues surface post-adjudication</div></div>
+
+      <div class="task-group" data-actor="system" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>PBC auto-coordinates with secondary plan during adjudication — Jane auto-adds the secondary policy to the patient profile</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-opp"><div class="card-type">Opportunity</div>PBC auto-coordination is the most advanced COB experience in Jane's Canadian integrations — PBC handles the secondary adjudication automatically and Jane reflects both payments. The only step required from the clinic is submitting to PBC as primary via PROVIDERnet.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Reconcile PBC COB payment amounts — deductible fields are sometimes miscalculated, creating unintended credits</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>When PBC coordinates benefits with a secondary plan, Jane can miscalculate the PBC invoice amount — copying the COB deductible field incorrectly and creating a credit on the PBC insurer account instead of applying the full secondary payment to the claim<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Jane then automatically copied over $32.76 into the Deductible Field and $61.05 into the Max Amount Field and created the PBC invoice owing as $28.29, when PBC actually paid $61.05. This resulted in a $61.05 PBC payment only partially applied, leaving a credit in PBC." — Christine K, #pt-insurance</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A reconciliation check after PBC COB processing — confirming that the sum of the primary payment + secondary payment equals the total submitted amount before any credits appear — would catch this miscalculation automatically rather than requiring the biller to discover it manually later.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.3</div><div class="card-title">CA — PBC R&amp;C limits prevent secondary forwarding; patient must submit own receipt</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.3">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Explain to patient why PBC didn't pass the balance to their secondary — R&C limit reached</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>PBC applies Reasonable & Customary (R&C) limits — when the limit is reached, the remaining balance is classified as non-eligible and not forwarded to the secondary plan at all. Patients and clinic staff are frequently confused and assume this is a Jane error rather than PBC policy<div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"PBC paid up to the maximum allowed under R&C on the primary plan. Any remaining amount is treated as patient responsibility. Because that balance isn't eligible, there's nothing for the secondary policy to coordinate." — Crystal J., #support_ca_insurance</div></div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>When a PBC COB claim returns with no secondary forwarding, surface a plain-language explanation in Jane — "PBC did not forward the remaining balance to your secondary plan (likely due to Reasonable & Customary limits). The patient may need to submit their receipt directly." — to avoid confusion and unnecessary support escalations.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div>
+  </div>
+  <div id="swimlane-view"></div>
+</div>
+
+<div class="edit-notice" id="editNotice">✏ Edit Mode — click any text to edit<button onclick="toggleEditMode()">Exit Edit Mode</button></div>
+
+<script type="application/json" id="journey-data">
+{
+  "title": "Coordination of Benefits (COB)",
+  "subtitle": "How a clinic bills a patient with two or more insurance plans — policy setup, primary claim submission, passing the balance to secondary, and the significant gaps in Canadian COB support.",
+  "version": "1.0",
+  "lastUpdated": "2026-03-10",
+  "goals": [
+    {"id": "G1", "text": "Staff correctly identify which policy is primary and which is secondary before the first claim is submitted"},
+    {"id": "G2", "text": "The secondary claim auto-populates with the primary EOB data so billers don't have to manually transcribe what the primary paid"},
+    {"id": "G3", "text": "The remaining patient balance is correctly calculated and communicated after both payers respond"}
+  ],
+  "actors": [
+    {"id": "admin", "label": "Clinic Admin", "emoji": "👩‍💼", "bg": "#FFE0B2", "color": "#E65100"},
+    {"id": "biller", "label": "Biller", "emoji": "🧾", "bg": "#F8BBD0", "color": "#880E4F"},
+    {"id": "system", "label": "Jane System", "emoji": "🖥", "bg": "#BBDEFB", "color": "#0D47A1"}
+  ],
+  "activities": [
+    {"num": "0", "name": "Set Up Dual Policies on the Patient Profile", "steps": [
+      {"id": "0.1", "title": "Identify which policy is primary and which is secondary"}
+    ]},
+    {"num": "1", "name": "Submit Primary Claim & Wait for ERA", "steps": [
+      {"id": "1.1", "title": "Submit primary — secondary marked Waiting on Primary"},
+      {"id": "1.2", "title": "Medicare / auto-forwarding: enable insurer setting"}
+    ]},
+    {"num": "2", "name": "Receive Primary ERA & Pass Balance to Secondary", "steps": [
+      {"id": "2.1", "title": "Process primary ERA — set remaining to Collect from Next Payer"}
+    ]},
+    {"num": "3", "name": "Submit & Process Secondary Claim (US)", "steps": [
+      {"id": "3.1", "title": "Submit secondary claim and receive secondary ERA"}
+    ]},
+    {"num": "4", "name": "Canadian COB — Significant Integration Gaps", "steps": [
+      {"id": "4.1", "title": "CA — identify which primary/secondary combos Jane supports"},
+      {"id": "4.2", "title": "CA — PBC auto-coordination & COB credit issues"},
+      {"id": "4.3", "title": "CA — PBC R&C limits prevent secondary forwarding"}
+    ]}
+  ]
+}
+</script>
+
+<script>
+let actors=[],activitiesWithSteps=[];
+function initFromJSON(){const j=document.getElementById('journey-data');if(!j)return;try{const d=JSON.parse(j.textContent);actors=(d.actors||[]).map(a=>({id:a.id,label:(a.emoji?a.emoji+' ':'')+a.label,color:a.bg}));activitiesWithSteps=(d.activities||[]).map(a=>({num:a.num,name:a.name,steps:(a.steps||[]).map(s=>({id:s.id,title:s.title}))}));if(d.lastUpdated&&d.lastUpdated!=='YYYY-MM-DD'){const h=document.querySelector('.page-header');if(h&&!document.getElementById('meta-row')){const m=document.createElement('p');m.id='meta-row';m.className='meta-row';m.textContent='Last updated: '+d.lastUpdated;h.appendChild(m);}}}catch(e){}}
+function buildLegend(){const l=document.getElementById('legend');if(!l)return;let h=`<div class="legend-item"><div class="legend-swatch" style="background:var(--card-step)"></div> Step</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-task)"></div> Task</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-pain)"></div> Pain Point</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-opp)"></div> Opportunity</div><div class="legend-item"><div class="legend-swatch" style="background:#FFF3F2;border:1.5px dashed #EF9A9A"></div> Suggested Pain</div><div class="legend-item"><div class="legend-swatch" style="background:#F2FAF2;border:1.5px dashed #A5D6A7"></div> Suggested Opp</div>`;if(actors.length){h+='<div class="legend-item" style="margin-left:8px;width:1px;height:11px;background:#ccc"></div>';actors.forEach(a=>{h+=`<div class="legend-item"><div class="legend-swatch" style="background:${a.color}"></div> ${a.label}</div>`;});}l.innerHTML=h;}
+function updateStatsBar(){const b=document.getElementById('stats-bar');if(!b)return;const t=document.querySelectorAll('#default-view .task-group').length;let p=0,o=0,s=0;document.querySelectorAll('#default-view .card-pain').forEach(c=>{if(c.closest('.task-details'))p++;});document.querySelectorAll('#default-view .card-opp').forEach(c=>{if(c.closest('.task-details'))o++;});document.querySelectorAll('#default-view .card-pain-sug,#default-view .card-opp-sug').forEach(c=>{if(c.closest('.task-details'))s++;});b.innerHTML=`<div class="stat-item tasks">${t} tasks</div><div class="stat-item pain">${p} pain points</div><div class="stat-item opp">${o} opportunities</div><div class="stat-item" style="color:var(--text-muted)">${s} suggestions</div>`;}
+function handleTaskHeaderClick(e,el){if(e.target.closest('.task-quote-link'))return;el.closest('.task-group').classList.toggle('open');}
+function toggleQuotePopover(e,btn){e.stopPropagation();const open=btn.classList.contains('popover-open');document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));if(!open)btn.classList.add('popover-open');}
+document.addEventListener('click',()=>{document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));});
+function injectQuoteBars(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header'),details=tg.querySelector('.task-details');if(!header||!details)return;const p=details.querySelectorAll('.card-pain .nested-quote').length,o=details.querySelectorAll('.card-opp .nested-quote').length,ps=details.querySelectorAll('.card-pain-sug').length,os=details.querySelectorAll('.card-opp-sug').length;if(p+o+ps+os===0)return;let mr=header.querySelector('.task-meta-row');if(!mr){mr=document.createElement('div');mr.className='task-meta-row';header.querySelector('.task-text').appendChild(mr);}let bar=mr.querySelector('.quote-bar');if(!bar){bar=document.createElement('div');bar.className='quote-bar';mr.appendChild(bar);}bar.innerHTML='';const add=(cls,n)=>{if(n<=0)return;const c=document.createElement('div');c.className='qb-cell '+cls;c.style.flex=n;bar.appendChild(c);};add('pain',p);add('opp',o);add('pain-sug',ps);add('opp-sug',os);});}
+function filterBySource(s,btn){document.querySelectorAll('.source-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.nested-quote').forEach(q=>{q.style.display=(s==='all'||q.dataset.source===s)?'':'none';});injectQuoteBars(document.getElementById('default-view'));}
+function toggleView(v){const dv=document.getElementById('default-view'),sv=document.getElementById('swimlane-view'),bd=document.getElementById('btn-default'),bs=document.getElementById('btn-swimlane');if(v==='default'){dv.style.display='';sv.style.display='none';bd.classList.add('active');bs.classList.remove('active');rebuildFixedHeader();}else{dv.style.display='none';sv.style.display='';bd.classList.remove('active');bs.classList.add('active');buildSwimlane();}}
+function buildSwimlane(){const sv=document.getElementById('swimlane-view');sv.innerHTML='';const cont=document.createElement('div');cont.className='swimlane-container';const hr=document.createElement('div');hr.className='sl-header-row';const corner=document.createElement('div');corner.className='sl-corner';hr.appendChild(corner);activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-header-divider';hr.appendChild(d);}const ag=document.createElement('div');ag.className='sl-header-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='sl-step-headers';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);hr.appendChild(ag);});cont.appendChild(hr);actors.forEach(actor=>{const row=document.createElement('div');row.className='sl-actor-row';const lbl=document.createElement('div');lbl.className='sl-actor-label';lbl.innerHTML=`<div class="al-dot" style="background:${actor.color}"></div><span>${actor.label}</span>`;row.appendChild(lbl);const cells=document.createElement('div');cells.className='sl-actor-cells';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-cell-divider';cells.appendChild(d);}const acg=document.createElement('div');acg.className='sl-activity-cell-group';act.steps.forEach(step=>{const cell=document.createElement('div');cell.className='sl-step-cell';cell.dataset.actorId=actor.id;cell.dataset.activityNum=act.num;cell.dataset.stepId=step.id;document.querySelectorAll(`#default-view .task-group[data-actor="${actor.id}"][data-activity="${act.num}"][data-step="${step.id}"]`).forEach(t=>{const clone=t.cloneNode(true);clone.querySelectorAll('.task-header').forEach(h=>{h.onclick=function(e){handleTaskHeaderClick(e,this);};});cell.appendChild(clone);});acg.appendChild(cell);});cells.appendChild(acg);});row.appendChild(cells);cont.appendChild(row);});sv.appendChild(cont);injectQuoteBars(sv);initQuoteLinks(sv);}
+function rebuildFixedHeader(){const fhi=document.getElementById('fixedHeaderInner');if(!fhi)return;fhi.innerHTML='';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='fh-divider';fhi.appendChild(d);}const ag=document.createElement('div');ag.className='fh-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='fh-step-row';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step" style="font-size:12px;padding:7px 10px"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);fhi.appendChild(ag);});}
+let _ss=false;window.addEventListener('scroll',()=>{const fh=document.getElementById('fixedHeader'),dv=document.getElementById('default-view');if(!fh||!dv)return;fh.classList.toggle('visible',dv.getBoundingClientRect().top<0);if(!_ss){_ss=true;fh.scrollLeft=window.scrollX;_ss=false;}},true);
+function toggleEditMode(){document.body.classList.toggle('edit-mode');const e=document.body.classList.contains('edit-mode');document.getElementById('btn-edit').classList.toggle('active',e);if(e){document.querySelectorAll('.card-title,.card-type,.task-text,.card-pain,.card-opp,.card-pain-sug,.card-opp-sug,.nested-quote,.activity-label').forEach(el=>{if(!el.closest('.activity-num')&&!el.closest('.legend')&&!el.closest('.stats-bar'))el.contentEditable='true';});}else{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));}}
+function exportMap(){const b=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='journey-11-coordination-of-benefits.html';a.click();}
+function initQuoteLinks(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header');if(!header||header.querySelector('.task-quote-link'))return;const quotes=tg.querySelectorAll('.task-details .nested-quote');if(!quotes.length)return;const btn=document.createElement('button');btn.className='task-quote-link';btn.title=`${quotes.length} quote${quotes.length!==1?'s':''}`;btn.setAttribute('onclick','toggleQuotePopover(event,this)');btn.innerHTML=`<svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-2 2-2-2H3a1 1 0 0 1-1-1V3zm3 2a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H5z"/></svg><div class="quote-popover"><div class="quote-popover-title">Source Quotes</div></div>`;const toggle=header.querySelector('.toggle');if(toggle)header.insertBefore(btn,toggle);else header.appendChild(btn);header.onclick=function(e){handleTaskHeaderClick(e,this);};})}
+document.addEventListener('DOMContentLoaded',()=>{initFromJSON();buildLegend();injectQuoteBars(document.getElementById('default-view'));initQuoteLinks(document.getElementById('default-view'));updateStatsBar();rebuildFixedHeader();});
+</script>
+</body>
+</html>

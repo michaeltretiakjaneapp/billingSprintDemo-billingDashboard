@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Map — Patient Billing (Collecting the Patient Portion)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root{--bg:#E8E6E1;--text:#1A1A1A;--text-muted:#5A5751;--card-task:#FFF9C4;--card-task-border:#E8DF8A;--card-pain:#FFCDD2;--card-pain-border:#EF9A9A;--card-step:#D1C4E9;--card-step-border:#B39DDB;--card-opp:#C8E6C9;--card-opp-border:#A5D6A7;--activity-bg:#1A1A1A;--grid-line:#D5D2CC;--shadow:#D4D1CC20;--col-w:280px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:auto}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;opacity:.4;pointer-events:none;z-index:0}
+  .page{position:relative;z-index:1;padding:32px 32px 60px;min-width:max-content}
+  .page-header{margin-bottom:20px;max-width:800px}
+  .page-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+  .page-header p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+  .meta-row{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .top-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .goal-chip{background:var(--activity-bg);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;line-height:1.4;white-space:nowrap}
+  .goal-chip span{color:#90CAF9;font-weight:700;margin-right:4px}
+  .legend{display:flex;gap:16px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--text-muted);flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:16px;height:11px;border-radius:3px;border:1px solid #ccc}
+  .stats-bar{display:flex;gap:18px;margin-bottom:14px;font-size:11px;font-weight:600;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:5px;color:var(--text-muted)}
+  .stat-item::before{font-size:9px}
+  .stat-item.pain::before{content:'⬤';color:#EF5350}
+  .stat-item.opp::before{content:'⬤';color:#66BB6A}
+  .stat-item.tasks::before{content:'⬤';color:#7E57C2}
+  .controls{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:#fff;border:1.5px solid var(--grid-line);border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .controls button:hover{background:#f0efec;border-color:#bbb}
+  .controls button.active{background:var(--activity-bg);color:#fff;border-color:var(--activity-bg)}
+  .controls-sep{width:1px;height:20px;background:var(--grid-line);margin:0 4px}
+  .actor-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .map-row{display:flex;align-items:flex-start;gap:0}
+  .activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .activity-label{background:var(--activity-bg);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px var(--shadow);margin-bottom:8px}
+  .activity-num{background:rgba(255,255,255,.15);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .activity-cols{display:flex;gap:24px;align-items:flex-start}
+  .activity-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;border-radius:1px;margin:0 24px}
+  .step-col{width:var(--col-w);min-width:var(--col-w);display:flex;flex-direction:column;gap:16px}
+  .fixed-header-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);box-shadow:0 4px 16px rgba(0,0,0,.1);padding:8px 32px 10px;display:none;overflow:hidden}
+  .fixed-header-bar.visible{display:block}
+  .fh-inner{display:flex;align-items:flex-end;gap:0;min-width:max-content}
+  .fh-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .fh-step-row{display:flex;gap:24px}
+  .fh-step-card{width:var(--col-w);min-width:var(--col-w)}
+  .fh-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .card{border-radius:7px;padding:9px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow)}
+  .card-step{background:var(--card-step);border:1.5px solid var(--card-step-border)}
+  .card-step .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5E35B1;margin-bottom:3px}
+  .card-step .card-title{font-size:14px;font-weight:700;color:#311B92;line-height:1.3}
+  .task-group{display:flex;flex-direction:column}
+  .task-header{background:var(--card-task);border:1.5px solid var(--card-task-border);border-radius:7px;padding:8px 11px;font-size:14px;line-height:1.45;box-shadow:1px 2px 5px var(--shadow);cursor:pointer;user-select:none;display:flex;align-items:flex-start;gap:7px;position:relative;z-index:2}
+  .task-header:hover{filter:brightness(.97)}
+  .task-group.open .task-header{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  .task-header .toggle{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8D7B00;margin-top:1px;transition:transform .2s;order:2;margin-left:auto}
+  .task-group.open .task-header .toggle{transform:rotate(90deg)}
+  .task-header .card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#8D7B00;margin-bottom:1px}
+  .task-header .task-text{flex:1;order:1}
+  .task-details{display:none;flex-direction:column;gap:8px;padding:8px;margin-top:-1px;background:#FDF8D8;border:1.5px solid var(--card-task-border);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;position:relative;z-index:1}
+  .task-group.open .task-details{display:flex;animation:expandPanel .15s ease-out forwards}
+  .task-group.open .task-details>*{opacity:0;animation:fadeInChild .12s ease-out forwards;animation-delay:.1s}
+  .task-group.open .task-details>*:nth-child(2){animation-delay:.13s}
+  .task-group.open .task-details>*:nth-child(3){animation-delay:.16s}
+  .task-group.open .task-details>*:nth-child(n+4){animation-delay:.19s}
+  @keyframes expandPanel{from{max-height:0;opacity:.5;padding-top:0;padding-bottom:0}to{max-height:2000px;opacity:1;padding-top:8px;padding-bottom:8px}}
+  @keyframes fadeInChild{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .card-pain{background:var(--card-pain);border:1.5px solid var(--card-pain-border)}
+  .card-pain .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp{background:var(--card-opp);border:1.5px solid var(--card-opp-border)}
+  .card-opp .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .card-pain-sug{background:#FFF3F2;border:1.5px dashed #EF9A9A}
+  .card-pain-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#C62828;margin-bottom:1px}
+  .card-opp-sug{background:#F2FAF2;border:1.5px dashed #A5D6A7}
+  .card-opp-sug .card-type{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2E7D32;margin-bottom:1px}
+  .nested-quote{margin-top:6px;padding:6px 9px;border-radius:5px;background:#F5F4F0;border:1px solid #E0DED8;font-style:italic;font-size:14px;line-height:1.4;color:var(--text)}
+  .nested-quote+.nested-quote{margin-top:4px}
+  .quote-source-badge{display:inline-block;font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;vertical-align:middle;font-style:normal}
+  .nested-quote[data-source="community"] .quote-source-badge{background:#F3E5F5;color:#6A1B9A}
+  .nested-quote[data-source="feedback"] .quote-source-badge{background:#FFF8E1;color:#F57F17}
+  .nested-quote[data-source="interview"] .quote-source-badge{background:#E3F2FD;color:#1565C0}
+  .quote-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px;gap:0}
+  .quote-bar .qb-cell{height:100%;min-width:0}
+  .quote-bar .qb-cell.pain{background:#EF5350}
+  .quote-bar .qb-cell.opp{background:#66BB6A}
+  .quote-bar .qb-cell.pain-sug{background:transparent;border:1.5px solid #EF5350;box-sizing:border-box}
+  .quote-bar .qb-cell.opp-sug{background:transparent;border:1.5px solid #66BB6A;box-sizing:border-box}
+  .quote-bar .qb-cell:first-child{border-radius:3px 0 0 3px}
+  .quote-bar .qb-cell:last-child{border-radius:0 3px 3px 0}
+  .quote-bar .qb-cell:first-child:last-child{border-radius:3px}
+  .task-group.open .quote-bar{display:none}
+  .task-meta-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .task-meta-row .quote-bar{flex:1;margin-top:0}
+  .task-group.open .task-meta-row{display:none}
+  .task-quote-link{flex-shrink:0;order:3;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:#8D7B00;opacity:.7;position:relative;transition:opacity .15s,background .15s;margin-top:1px;background:transparent;border:none;padding:0;font-family:inherit}
+  .task-quote-link:hover{opacity:1;background:rgba(141,123,0,.12)}
+  .task-quote-link svg{width:13px;height:13px;fill:currentColor}
+  .quote-popover{position:absolute;top:calc(100% + 6px);right:0;z-index:50;background:#fff;border:1.5px solid #E0DED8;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.13);padding:10px 12px;min-width:220px;max-width:320px;display:none;flex-direction:column;gap:6px;font-style:normal}
+  .task-quote-link.popover-open .quote-popover{display:flex}
+  .quote-popover-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#AAA69E;margin-bottom:2px}
+  .edit-notice{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--activity-bg);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;gap:12px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap}
+  body.edit-mode .edit-notice{display:flex}
+  .edit-notice button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  body.edit-mode [contenteditable="true"]{outline:1.5px dashed #7E57C2;outline-offset:2px;border-radius:3px;cursor:text}
+  body.edit-mode [contenteditable="true"]:focus{outline:2px solid #7E57C2;background:rgba(126,87,194,.06)}
+  body::-webkit-scrollbar{height:10px}
+  body::-webkit-scrollbar-track{background:#D5D2CC}
+  body::-webkit-scrollbar-thumb{background:#AAA69E;border-radius:5px}
+  #swimlane-view{display:none}
+  .swimlane-container{min-width:max-content;padding-top:8px;position:relative}
+  .sl-header-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px}
+  .sl-corner{width:150px;min-width:150px}
+  .sl-header-activity-group{display:flex;flex-direction:column;align-items:flex-start}
+  .sl-step-headers{display:flex;gap:24px}
+  .sl-header-divider,.sl-cell-divider{width:2px;min-width:2px;background:#C4C0B8;align-self:stretch;margin:0 24px}
+  .sl-actor-row{display:flex;gap:0;align-items:flex-start;min-height:60px}
+  .sl-actor-row+.sl-actor-row{border-top:1px solid #D5D2CC;padding-top:8px}
+  .sl-actor-label{width:150px;min-width:150px;padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:flex-start;gap:6px;position:sticky;left:0;background:var(--bg);z-index:8;align-self:stretch}
+  .sl-actor-label .al-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .sl-actor-cells{display:flex;gap:0;align-items:flex-start}
+  .sl-activity-cell-group{display:flex;gap:24px;align-items:flex-start}
+  .sl-step-cell{min-width:var(--col-w);width:var(--col-w);padding:16px 0;display:flex;flex-direction:column;gap:16px}
+  .sl-arrow-overlay{position:absolute;top:0;left:0;pointer-events:none;z-index:3}
+  .sl-arrow-overlay path{fill:none;stroke:#7E57C2;stroke-width:2}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;padding:6px 12px;background:#1A1A1A;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">&larr; Back to Journey Index</a>
+  <div class="page-header">
+    <h1>Patient Billing (Collecting the Patient Portion)</h1>
+    <p>After the insurer pays (or for self-pay patients), this journey covers how the clinic determines what the patient owes, generates a statement or invoice, collects the payment, and reconciles the visit as fully paid. Includes the "Payable to Patient" vs "Collect from Insurer" mode split, balance write-off and adjustment workflows, and the patient dispute path. Signal from #support_usa_billing, #support_us_manualtherapy, and #pt-insurance-coordinate.</p>
+  </div>
+
+  <div class="top-bar">
+    <div class="goal-chip"><span>G1</span> Patient receives a clear, accurate statement immediately after the insurer's ERA is processed — no manual trigger required</div>
+    <div class="goal-chip"><span>G2</span> Clinic collects the patient portion without a phone call or manual follow-up in the majority of cases</div>
+    <div class="goal-chip"><span>G3</span> Visit is fully reconciled (zero balance) with a complete audit trail of insurer payment + patient payment</div>
+  </div>
+
+  <div id="legend" class="legend"></div>
+  <div id="stats-bar" class="stats-bar"></div>
+
+  <div class="controls">
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.add('open'))">Expand All</button>
+    <button onclick="document.querySelectorAll('.task-group').forEach(g=>g.classList.remove('open'))">Collapse All</button>
+    <div class="controls-sep"></div>
+    <button id="btn-default" class="active" onclick="toggleView('default')">Column View</button>
+    <button id="btn-swimlane" onclick="toggleView('swimlane')">Swimlane View</button>
+    <div class="controls-sep"></div>
+    <button id="src-all" class="source-filter-btn active" onclick="filterBySource('all',this)">All Sources</button>
+    <button id="src-community" class="source-filter-btn" onclick="filterBySource('community',this)">Community</button>
+    <button id="src-feedback" class="source-filter-btn" onclick="filterBySource('feedback',this)">Feedback</button>
+    <div class="controls-sep"></div>
+    <button id="btn-edit" onclick="toggleEditMode()">Edit Map</button>
+    <button onclick="exportMap()">&#8595; Download</button>
+  </div>
+
+  <div class="fixed-header-bar" id="fixedHeader"><div class="fh-inner" id="fixedHeaderInner"></div></div>
+
+  <div id="default-view">
+  <div class="map-row">
+
+<!-- ACTIVITY 0: DETERMINE PATIENT BALANCE -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">0</div>Determine Patient Balance</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.1</div><div class="card-title">Jane calculates the remaining patient balance after insurer payment is applied</div></div>
+
+      <div class="task-group" data-actor="system" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Apply insurer EOB payments to the invoice and surface the remaining patient balance</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Jane calculates the remaining balance based on what was entered in the EOB — but if the biller entered the wrong allowed amount, adjustment, or patient responsibility split during ERA processing, the resulting patient balance is also wrong. There is no reconciliation check between what the ERA said and what was entered.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A post-ERA summary showing "Insurer paid: $X | Patient responsibility: $Y | Remaining: $Z" before the statement is generated would let the biller spot errors before they reach the patient.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Verify copay, deductible, and coinsurance amounts are correct before billing the patient</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>If eligibility was not verified before the appointment, the biller may not know the patient's actual deductible status — so the amount billed to the patient can be wrong. This is only discovered after the ERA arrives, sometimes weeks later, requiring a corrected statement and eroding patient trust.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Patient was billed the wrong copay amount because we didn't verify eligibility ahead of time. Now the patient is upset and we have to chase them for the difference." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Real-time eligibility verification (Journey #4) feeds the deductible and copay into the patient's policy in Jane — so when the ERA arrives, the expected patient balance is already set and the post-ERA math is a confirmation, not a discovery.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 0.2</div><div class="card-title">Biller determines whether this is "Collect from Patient" or "Payable to Patient" mode</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="0" data-step="0.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Identify whether the insurer pays the clinic directly or pays the patient (assignment of benefits)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>"Payable to Patient" mode in Jane — where the insurer reimburses the patient directly instead of the clinic — is a frequently misunderstood setting. Billers often don't know this mode exists, apply it inconsistently, or switch modes after the fact, which can create accounting errors and misaligned balances.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I'm confused about when to use Payable to Patient vs the normal mode. The insurer sent the cheque to the patient but we still need to collect our portion from the patient — how do I set this up correctly?" — Support thread, #support_us_manualtherapy</div>
+          </div>
+          <div class="card card-pain-sug"><div class="card-type">Suggested Pain</div>When a patient pays out of pocket at the time of service and the insurer later reimburses the patient (not the clinic), the clinic's invoice is already marked as paid — but technically the clinic collected the full amount from the patient, not the insurer. Jane's accounting for this scenario is unclear and varies by how the biller recorded the initial payment.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>In-context guidance on the invoice view — explaining Payable to Patient vs Collect from Insurer with a real example — would reduce support tickets and biller errors significantly. A prompt at ERA processing time ("This ERA response is for a patient-assigned claim — switch to Payable to Patient mode?") would catch it at the right moment.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 1: GENERATE PATIENT STATEMENT -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">1</div>Generate & Send Patient Statement</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.1</div><div class="card-title">Biller generates a patient invoice or statement and sends it</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Navigate to the patient's invoice, review the balance, and send the invoice via email or print</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Sending a patient statement is a fully manual step — the biller must navigate to each patient's invoice individually after ERA processing. There is no automated trigger to send a statement once the ERA is marked reviewed and the patient balance is calculated. High-volume clinics must batch-send statements manually, which is time-consuming.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"We have to manually go into each patient record after processing ERAs to send invoices. There's no way to batch-send statements to all patients with outstanding balances after a remittance is done." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>An auto-send rule — "after ERA is marked reviewed, automatically send statement to any patient whose balance changed" — would eliminate the manual dispatch step for routine cases and ensure patients receive timely bills without biller intervention.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="system" data-activity="1" data-step="1.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Generate the patient-facing invoice showing service date, codes, insurer payment, and balance owing</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Patient invoices in Jane display raw billing and diagnosis codes (e.g. "97110 — Therapeutic Exercise" or "M54.5") that most patients do not understand. There is no plain-language description of what was billed. Patients frequently call the clinic asking what the invoice is for, creating unnecessary admin work.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Patients call us all the time asking what the codes on their invoice mean. It would be great if Jane could show something like 'Physical Therapy — 30 minutes' instead of just the CPT code." — Canny feature request, Patient Billing</div>
+          </div>
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The patient invoice does not clearly show the full payment breakdown — what the insurer paid, what was written off as a contractual adjustment, and what the patient owes. Patients see only the final balance, which leads to confusion and disputes when they expected insurance to cover more.</div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A patient-facing invoice summary: "Billed: $150 | Insurance paid: $90 | Contractual adjustment: $30 | Your balance: $30" — with plain-language service descriptions — would reduce patient confusion and disputes significantly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 1.2</div><div class="card-title">Patient receives the statement and decides how to pay</div></div>
+
+      <div class="task-group" data-actor="patient" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#C8E6C9;color:#1B5E20">Patient</span><div class="card-type">Task</div>Open the invoice email or statement and understand what is owed and why</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The invoice email from Jane lacks context — patients receive a dollar amount with minimal explanation of the service, what insurance covered, or why their portion is what it is. Many patients don't pay simply because they don't understand the bill, not because they're unwilling.
+            <div class="nested-quote" data-source="feedback"><span class="quote-source-badge">Feedback</span>"Patients often ignore invoices not because they can't pay, but because they don't understand why they owe money when they thought insurance covered everything." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "why do I owe this?" explainer embedded in the patient-facing invoice — showing a plain-language breakdown of the insurer's decision — would reduce confusion-driven non-payment and support calls.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="patient" data-activity="1" data-step="1.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#C8E6C9;color:#1B5E20">Patient</span><div class="card-type">Task</div>Choose payment method: online portal, in-person at front desk, or mail cheque</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Not all patients use email or the online portal — some patients, particularly older demographics, prefer to pay by cheque or in person. Jane's patient billing workflow is optimised for online/digital payment; clinics with mixed patient populations must manage payment tracking across multiple channels manually.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"We have a lot of older patients who mail us a cheque. There's no good way to track that in Jane — we record it manually and hope nothing slips through." — Support thread, #support_usa_billing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 2: COLLECT PAYMENT -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">2</div>Collect Payment</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.1</div><div class="card-title">Patient pays online via Jane's patient portal or at the front desk</div></div>
+
+      <div class="task-group" data-actor="patient" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#C8E6C9;color:#1B5E20">Patient</span><div class="card-type">Task</div>Click payment link in invoice email → enter card details → submit payment</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>The patient invoice link in Jane expires or becomes inaccessible if the invoice status changes (e.g. partial payment recorded, biller edits the invoice). Patients who click a stale link receive an error or see a different amount than expected, leading to support calls.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Patient says the link I sent doesn't work anymore. I updated the invoice after sending it and now the original link is dead." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Invoice links should resolve to the current state of the invoice, not a snapshot — so even if the biller updates the balance, the patient's link remains valid and reflects the corrected amount.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="admin" data-activity="2" data-step="2.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#FFE0B2;color:#E65100">Clinic Admin</span><div class="card-type">Task</div>Collect copay or outstanding balance at check-in or check-out via Jane's POS/payment screen</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>When collecting a copay at check-in, the front desk may not yet know the patient's exact copay amount — especially if the insurer's response for previous visits hasn't been processed yet. They either guess (using the eligibility-verified copay amount), skip it and bill later, or ask the patient to wait while they look it up.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"We try to collect the copay at check-in but half the time we don't actually know the right amount because the ERA from last week hasn't been processed. It's a guessing game." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Eligibility verification (Journey #4) surfacing the confirmed copay on the appointment panel — visible to the front desk at check-in — means the admin can confidently collect the correct amount without leaving the scheduling view.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 2.2</div><div class="card-title">Jane records the patient payment and updates the invoice balance</div></div>
+
+      <div class="task-group" data-actor="system" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Apply the patient payment to the invoice and update the outstanding balance</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>If a patient pays a partial amount (e.g. $20 of a $50 balance), Jane does not track partial payment status clearly — the invoice either shows as fully unpaid or requires manual intervention to reflect the partial. There is no "partially paid" state with a remaining balance tracker visible at a glance.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Patient paid half their bill but I can't easily see which patients have partial balances remaining — I have to open each invoice individually to check." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "Partially Paid" invoice status with the remaining balance prominently displayed — and a filterable view of all partially paid invoices — would give billers a clear action queue for patient balance follow-up.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="2" data-step="2.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Follow up on unpaid patient balances that haven't been paid after the statement was sent</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no automated patient balance follow-up in Jane — no second reminder email, no overdue notice, no escalation path. Billers must manually identify aging patient balances (by exporting the billing report), then individually contact each patient. Most clinics don't do this systematically, leaving money on the table.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"We know there are outstanding patient balances sitting there but we don't have time to manually chase each one. If Jane sent a reminder automatically after 30 days that would save us hours every month." — Canny feature request, Patient Billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>Automated patient balance reminders — configurable (e.g. send a reminder after 14 days, a second after 30 days, escalate after 60 days) — would dramatically increase collection rates without additional biller effort. This is a well-understood pattern in practice management software.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 3: RECONCILE THE VISIT -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">3</div>Reconcile & Close the Visit</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.1</div><div class="card-title">Biller confirms the invoice is fully paid and the visit is reconciled</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Verify insurer payment + patient payment = full billed amount (minus contractual adjustments)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>There is no single reconciliation view in Jane that shows: billed amount, insurer payment, contractual adjustment, patient payment, and remaining balance — all in one place for a given visit. Billers must mentally assemble this from multiple screens (invoice, ERA response, payment record), which is error-prone and slow.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"To check if a visit is truly 'done' I have to look at the invoice, the ERA response, and the payment record separately. I always worry I'm missing something." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A per-visit financial summary card — "Billed: $X | Insurance paid: $X | Patient paid: $X | Adjustment: $X | Balance: $0 ✓" — visible directly on the appointment or patient profile would give billers instant reconciliation confirmation.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="3" data-step="3.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Write off any remaining small balances (rounding errors, minimum balance thresholds, contractual adjustments)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Writing off a small remaining balance (e.g. a $0.01 rounding difference or a $2 contractual adjustment) requires navigating through multiple steps in Jane with no clear "write off" action button. Billers develop workarounds — manually recording a $0.01 patient payment, or leaving the invoice open indefinitely — which distorts the books.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I have dozens of invoices with $0.01 remaining because I can't figure out how to write off a balance that small without recording a fake payment. It pollutes my outstanding balances list." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp"><div class="card-type">Opportunity</div>A write-off action on invoices — with a reason code (contractual adjustment, bad debt, courtesy write-off, below minimum balance threshold) and an audit trail — would make balance reconciliation clean and give clinics proper accounting records for each visit.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 3.2</div><div class="card-title">Invoice marked as fully paid — visit is closed</div></div>
+
+      <div class="task-group" data-actor="system" data-activity="3" data-step="3.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#BBDEFB;color:#0D47A1">Jane System</span><div class="card-type">Task</div>Mark invoice as Paid and remove it from the outstanding balance queue</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Invoices that are technically "zero balance" but not explicitly marked Paid continue to appear in billing reports and outstanding balance views in some contexts. Billers are never fully sure whether an invoice is truly closed or just temporarily at zero.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"My report still shows this invoice as outstanding even though the balance is $0. I don't understand why it's still showing up." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Auto-mark an invoice as Paid when the running balance reaches $0 — with a clear visual state change — so billers have unambiguous confirmation that the visit is fully reconciled.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="activity-divider"></div>
+
+<!-- ACTIVITY 4: HANDLE EXCEPTIONS -->
+<div class="activity-group">
+  <div class="activity-label"><div class="activity-num">4</div>Handle Exceptions</div>
+  <div class="activity-cols">
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.1</div><div class="card-title">Patient disputes the bill or questions the amount</div></div>
+
+      <div class="task-group" data-actor="patient" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#C8E6C9;color:#1B5E20">Patient</span><div class="card-type">Task</div>Patient contacts the clinic to dispute or question their bill</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>When a patient calls to dispute a bill, the admin or biller must navigate across Jane screens (invoice, ERA response, eligibility check, appointment notes) to piece together a full explanation. There is no single "billing history" view that tells the story of a visit from service to final payment in chronological order.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Patient is on the phone asking why they owe $45. I have to look at three different screens to explain what their insurance covered and what they owe — by which time I've already lost them." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A visit-level billing timeline — "Service → Claim submitted → ERA received → Insurance paid $X → Patient balance $Y → Statement sent → Patient paid $Z" — would give any staff member a full picture of the financial story of a visit in seconds, enabling faster and more confident patient communication.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.1">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Investigate the dispute, correct any errors, re-issue the statement or process a refund if warranted</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>If a billing error is found (wrong code, wrong insurer, wrong copay amount), the biller must re-open the claim, make corrections, potentially resubmit, and then re-generate the patient statement. There is no guided "billing correction" path — each error type requires a different sequence of steps that billers must know from experience.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"Every billing correction is a different puzzle. Wrong insurer is one set of steps, wrong code is another. I wish Jane had a correction flow that walked me through what to fix." — Billing ride-along notes</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A "correct this bill" workflow that guides the biller through the appropriate steps based on the type of error — wrong insurer, wrong code, wrong patient, overpayment — would reduce correction errors and training overhead.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-col">
+      <div class="card card-step"><div class="card-type">Step 4.2</div><div class="card-title">Self-pay or uninsured patient — no insurer in the loop</div></div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Generate and send patient invoice for the full service amount (no ERA step, no insurer payment)</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>For self-pay patients, the billing flow is simpler but Jane doesn't clearly distinguish self-pay billing from insured billing in the workflow. Billers sometimes accidentally route a self-pay invoice through the claim submission flow or set it to "awaiting insurer response" — putting it in a limbo state.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"I accidentally submitted a claim for a self-pay patient. Now it's sitting in Submitted and I can't figure out how to pull it back without voiding the whole invoice." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>A clear "Self-Pay" invoice mode that bypasses the claim submission workflow entirely — with a direct path to patient billing — would prevent self-pay invoices from accidentally entering the insurance billing queue.</div>
+        </div>
+      </div>
+
+      <div class="task-group" data-actor="biller" data-activity="4" data-step="4.2">
+        <div class="task-header" onclick="handleTaskHeaderClick(event,this)">
+          <div class="task-text"><span class="actor-badge" style="background:#F8BBD0;color:#880E4F">Biller</span><div class="card-type">Task</div>Apply a sliding scale, courtesy discount, or financial hardship reduction to the invoice</div>
+          <div class="toggle">&#9654;</div>
+        </div>
+        <div class="task-details">
+          <div class="card card-pain"><div class="card-type">Pain Point</div>Applying a discount or sliding scale fee to a self-pay invoice requires a manual adjustment in Jane with no pre-configured discount types — every adjustment is a one-off. Clinics that have formal sliding scale policies (e.g. income-based tiers) must track these outside Jane and manually apply the right amount each time.
+            <div class="nested-quote" data-source="community"><span class="quote-source-badge">Community</span>"We have a sliding scale for low-income patients but there's no way to set that up in Jane. I manually calculate the right amount and type in a custom discount every single time." — Support thread, #support_usa_billing</div>
+          </div>
+          <div class="card card-opp-sug"><div class="card-type">Suggested Opportunity</div>Configurable discount types (sliding scale tiers, courtesy adjustments, hardship write-offs) that can be applied from a dropdown on the invoice — with audit trail and reason codes — would support clinics with formal financial assistance programs.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div><!-- end map-row -->
+  </div><!-- end default-view -->
+  <div id="swimlane-view"></div>
+</div>
+
+<div class="edit-notice" id="editNotice">✏ Edit Mode — click any text to edit<button onclick="toggleEditMode()">Exit Edit Mode</button></div>
+
+<script type="application/json" id="journey-data">
+{
+  "title": "Patient Billing (Collecting the Patient Portion)",
+  "subtitle": "How the clinic determines what the patient owes, generates a statement, collects payment, and reconciles the visit — including the Payable to Patient mode, self-pay path, balance write-offs, and dispute handling.",
+  "version": "1.0",
+  "lastUpdated": "2026-03-10",
+  "goals": [
+    {"id": "G1", "text": "Patient receives a clear, accurate statement immediately after the insurer's ERA is processed — no manual trigger required"},
+    {"id": "G2", "text": "Clinic collects the patient portion without a phone call or manual follow-up in the majority of cases"},
+    {"id": "G3", "text": "Visit is fully reconciled (zero balance) with a complete audit trail of insurer payment + patient payment"}
+  ],
+  "actors": [
+    {"id": "biller", "label": "Biller", "emoji": "🧾", "bg": "#F8BBD0", "color": "#880E4F"},
+    {"id": "admin", "label": "Clinic Admin", "emoji": "🏥", "bg": "#FFE0B2", "color": "#E65100"},
+    {"id": "patient", "label": "Patient", "emoji": "🧑", "bg": "#C8E6C9", "color": "#1B5E20"},
+    {"id": "system", "label": "Jane System", "emoji": "🖥", "bg": "#BBDEFB", "color": "#0D47A1"}
+  ],
+  "activities": [
+    {"num": "0", "name": "Determine Patient Balance", "steps": [
+      {"id": "0.1", "title": "Jane calculates remaining balance after insurer payment"},
+      {"id": "0.2", "title": "Biller determines Collect from Patient vs Payable to Patient mode"}
+    ]},
+    {"num": "1", "name": "Generate & Send Patient Statement", "steps": [
+      {"id": "1.1", "title": "Biller generates invoice and sends to patient"},
+      {"id": "1.2", "title": "Patient receives statement and decides how to pay"}
+    ]},
+    {"num": "2", "name": "Collect Payment", "steps": [
+      {"id": "2.1", "title": "Patient pays online or at front desk"},
+      {"id": "2.2", "title": "Jane records payment and updates invoice balance"}
+    ]},
+    {"num": "3", "name": "Reconcile & Close the Visit", "steps": [
+      {"id": "3.1", "title": "Biller verifies full payment and writes off remaining balance"},
+      {"id": "3.2", "title": "Invoice marked as Paid — visit closed"}
+    ]},
+    {"num": "4", "name": "Handle Exceptions", "steps": [
+      {"id": "4.1", "title": "Patient disputes the bill"},
+      {"id": "4.2", "title": "Self-pay / uninsured patient billing"}
+    ]}
+  ]
+}
+</script>
+
+<script>
+let actors=[],activitiesWithSteps=[];
+function initFromJSON(){const j=document.getElementById('journey-data');if(!j)return;try{const d=JSON.parse(j.textContent);actors=(d.actors||[]).map(a=>({id:a.id,label:(a.emoji?a.emoji+' ':'')+a.label,color:a.bg}));activitiesWithSteps=(d.activities||[]).map(a=>({num:a.num,name:a.name,steps:(a.steps||[]).map(s=>({id:s.id,title:s.title}))}));if(d.lastUpdated&&d.lastUpdated!=='YYYY-MM-DD'){const h=document.querySelector('.page-header');if(h&&!document.getElementById('meta-row')){const m=document.createElement('p');m.id='meta-row';m.className='meta-row';m.textContent='Last updated: '+d.lastUpdated;h.appendChild(m);}}}catch(e){}}
+function buildLegend(){const l=document.getElementById('legend');if(!l)return;let h=`<div class="legend-item"><div class="legend-swatch" style="background:var(--card-step)"></div> Step</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-task)"></div> Task</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-pain)"></div> Pain Point</div><div class="legend-item"><div class="legend-swatch" style="background:var(--card-opp)"></div> Opportunity</div><div class="legend-item"><div class="legend-swatch" style="background:#FFF3F2;border:1.5px dashed #EF9A9A"></div> Suggested Pain</div><div class="legend-item"><div class="legend-swatch" style="background:#F2FAF2;border:1.5px dashed #A5D6A7"></div> Suggested Opp</div>`;if(actors.length){h+='<div class="legend-item" style="margin-left:8px;width:1px;height:11px;background:#ccc"></div>';actors.forEach(a=>{h+=`<div class="legend-item"><div class="legend-swatch" style="background:${a.color}"></div> ${a.label}</div>`;});}l.innerHTML=h;}
+function updateStatsBar(){const b=document.getElementById('stats-bar');if(!b)return;const t=document.querySelectorAll('#default-view .task-group').length;let p=0,o=0,s=0;document.querySelectorAll('#default-view .card-pain').forEach(c=>{if(c.closest('.task-details'))p++;});document.querySelectorAll('#default-view .card-opp').forEach(c=>{if(c.closest('.task-details'))o++;});document.querySelectorAll('#default-view .card-pain-sug,#default-view .card-opp-sug').forEach(c=>{if(c.closest('.task-details'))s++;});b.innerHTML=`<div class="stat-item tasks">${t} tasks</div><div class="stat-item pain">${p} pain points</div><div class="stat-item opp">${o} opportunities</div><div class="stat-item" style="color:var(--text-muted)">${s} suggestions</div>`;}
+function handleTaskHeaderClick(e,el){if(e.target.closest('.task-quote-link'))return;el.closest('.task-group').classList.toggle('open');}
+function toggleQuotePopover(e,btn){e.stopPropagation();const open=btn.classList.contains('popover-open');document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));if(!open)btn.classList.add('popover-open');}
+document.addEventListener('click',()=>{document.querySelectorAll('.task-quote-link.popover-open').forEach(b=>b.classList.remove('popover-open'));});
+function injectQuoteBars(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header'),details=tg.querySelector('.task-details');if(!header||!details)return;const p=details.querySelectorAll('.card-pain .nested-quote').length,o=details.querySelectorAll('.card-opp .nested-quote').length,ps=details.querySelectorAll('.card-pain-sug').length,os=details.querySelectorAll('.card-opp-sug').length;if(p+o+ps+os===0)return;let mr=header.querySelector('.task-meta-row');if(!mr){mr=document.createElement('div');mr.className='task-meta-row';header.querySelector('.task-text').appendChild(mr);}let bar=mr.querySelector('.quote-bar');if(!bar){bar=document.createElement('div');bar.className='quote-bar';mr.appendChild(bar);}bar.innerHTML='';const add=(cls,n)=>{if(n<=0)return;const c=document.createElement('div');c.className='qb-cell '+cls;c.style.flex=n;bar.appendChild(c);};add('pain',p);add('opp',o);add('pain-sug',ps);add('opp-sug',os);});}
+function filterBySource(s,btn){document.querySelectorAll('.source-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.nested-quote').forEach(q=>{q.style.display=(s==='all'||q.dataset.source===s)?'':'none';});injectQuoteBars(document.getElementById('default-view'));}
+function toggleView(v){const dv=document.getElementById('default-view'),sv=document.getElementById('swimlane-view'),bd=document.getElementById('btn-default'),bs=document.getElementById('btn-swimlane');if(v==='default'){dv.style.display='';sv.style.display='none';bd.classList.add('active');bs.classList.remove('active');rebuildFixedHeader();}else{dv.style.display='none';sv.style.display='';bd.classList.remove('active');bs.classList.add('active');buildSwimlane();}}
+function buildSwimlane(){const sv=document.getElementById('swimlane-view');sv.innerHTML='';const cont=document.createElement('div');cont.className='swimlane-container';const hr=document.createElement('div');hr.className='sl-header-row';const corner=document.createElement('div');corner.className='sl-corner';hr.appendChild(corner);activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-header-divider';hr.appendChild(d);}const ag=document.createElement('div');ag.className='sl-header-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='sl-step-headers';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);hr.appendChild(ag);});cont.appendChild(hr);actors.forEach(actor=>{const row=document.createElement('div');row.className='sl-actor-row';const lbl=document.createElement('div');lbl.className='sl-actor-label';lbl.innerHTML=`<div class="al-dot" style="background:${actor.color}"></div><span>${actor.label}</span>`;row.appendChild(lbl);const cells=document.createElement('div');cells.className='sl-actor-cells';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='sl-cell-divider';cells.appendChild(d);}const acg=document.createElement('div');acg.className='sl-activity-cell-group';act.steps.forEach(step=>{const cell=document.createElement('div');cell.className='sl-step-cell';cell.dataset.actorId=actor.id;cell.dataset.activityNum=act.num;cell.dataset.stepId=step.id;document.querySelectorAll(`#default-view .task-group[data-actor="${actor.id}"][data-activity="${act.num}"][data-step="${step.id}"]`).forEach(t=>{const clone=t.cloneNode(true);clone.querySelectorAll('.task-header').forEach(h=>{h.onclick=function(e){handleTaskHeaderClick(e,this);};});cell.appendChild(clone);});acg.appendChild(cell);});cells.appendChild(acg);});row.appendChild(cells);cont.appendChild(row);});sv.appendChild(cont);injectQuoteBars(sv);initQuoteLinks(sv);}
+function rebuildFixedHeader(){const fhi=document.getElementById('fixedHeaderInner');if(!fhi)return;fhi.innerHTML='';activitiesWithSteps.forEach((act,ai)=>{if(ai>0){const d=document.createElement('div');d.className='fh-divider';fhi.appendChild(d);}const ag=document.createElement('div');ag.className='fh-activity-group';const lbl=document.createElement('div');lbl.className='activity-label';lbl.innerHTML=`<div class="activity-num">${act.num}</div>${act.name}`;ag.appendChild(lbl);const sr=document.createElement('div');sr.className='fh-step-row';act.steps.forEach(step=>{const sc=document.createElement('div');sc.className='fh-step-card';sc.innerHTML=`<div class="card card-step" style="font-size:12px;padding:7px 10px"><div class="card-type">Step ${step.id}</div><div class="card-title">${step.title}</div></div>`;sr.appendChild(sc);});ag.appendChild(sr);fhi.appendChild(ag);});}
+let _ss=false;window.addEventListener('scroll',()=>{const fh=document.getElementById('fixedHeader'),dv=document.getElementById('default-view');if(!fh||!dv)return;fh.classList.toggle('visible',dv.getBoundingClientRect().top<0);if(!_ss){_ss=true;fh.scrollLeft=window.scrollX;_ss=false;}},true);
+function toggleEditMode(){document.body.classList.toggle('edit-mode');const e=document.body.classList.contains('edit-mode');document.getElementById('btn-edit').classList.toggle('active',e);if(e){document.querySelectorAll('.card-title,.card-type,.task-text,.card-pain,.card-opp,.card-pain-sug,.card-opp-sug,.nested-quote,.activity-label').forEach(el=>{if(!el.closest('.activity-num')&&!el.closest('.legend')&&!el.closest('.stats-bar'))el.contentEditable='true';});}else{document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));}}
+function exportMap(){const b=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='journey-10-patient-billing.html';a.click();}
+function initQuoteLinks(root){(root||document).querySelectorAll('.task-group').forEach(tg=>{const header=tg.querySelector('.task-header');if(!header||header.querySelector('.task-quote-link'))return;const quotes=tg.querySelectorAll('.task-details .nested-quote');if(!quotes.length)return;const btn=document.createElement('button');btn.className='task-quote-link';btn.title=`${quotes.length} quote${quotes.length!==1?'s':''}`;btn.setAttribute('onclick','toggleQuotePopover(event,this)');btn.innerHTML=`<svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-2 2-2-2H3a1 1 0 0 1-1-1V3zm3 2a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H5z"/></svg><div class="quote-popover"><div class="quote-popover-title">Source Quotes</div></div>`;const toggle=header.querySelector('.toggle');if(toggle)header.insertBefore(btn,toggle);else header.appendChild(btn);header.onclick=function(e){handleTaskHeaderClick(e,this);};})}
+document.addEventListener('DOMContentLoaded',()=>{initFromJSON();buildLegend();injectQuoteBars(document.getElementById('default-view'));initQuoteLinks(document.getElementById('default-view'));updateStatsBar();rebuildFixedHeader();});
+</script>
+</body>
+</html>
